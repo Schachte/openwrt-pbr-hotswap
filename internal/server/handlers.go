@@ -32,12 +32,13 @@ type ErrorResponse struct {
 }
 
 type IndexData struct {
-	VPNInterface   string
-	VPNInterfaces  []InterfaceInfo
-	ServiceRunning bool
-	Devices        []device.Device
-	LastUpdated    string
-	Version        string
+	VPNInterface     string
+	DefaultInterface string
+	VPNInterfaces    []InterfaceInfo
+	ServiceRunning   bool
+	Devices          []device.Device
+	LastUpdated      string
+	Version          string
 }
 
 type InterfaceInfo struct {
@@ -75,12 +76,13 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	interfaces := s.buildInterfaceList()
 
 	data := IndexData{
-		VPNInterface:   s.config.GetActiveInterface(),
-		VPNInterfaces:  interfaces,
-		ServiceRunning: true,
-		Devices:        devices,
-		LastUpdated:    time.Now().Format("2006-01-02 15:04:05"),
-		Version:        s.version,
+		VPNInterface:     s.config.GetActiveInterface(),
+		DefaultInterface: s.config.GetDefaultInterface(),
+		VPNInterfaces:    interfaces,
+		ServiceRunning:   true,
+		Devices:          devices,
+		LastUpdated:      time.Now().Format("2006-01-02 15:04:05"),
+		Version:          s.version,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

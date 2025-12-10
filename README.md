@@ -42,6 +42,7 @@ Create `config.json` for multiple VPN interfaces:
     {"name": "vpn_amsterdam", "display_name": "Amsterdam"},
     {"name": "vpn_london", "display_name": "London"}
   ],
+  "default_interface": "vpn_amsterdam",
   "dhcp_leases_path": "/tmp/dhcp.leases",
   "ethers_path": "/etc/ethers",
   "hosts_path": "/etc/hosts",

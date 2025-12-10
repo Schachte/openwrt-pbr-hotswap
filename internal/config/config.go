@@ -15,8 +15,9 @@ type Config struct {
 
 	VPNInterface string `json:"vpn_interface"`
 
-	VPNInterfaces   []VPNInterface `json:"vpn_interfaces"`
-	ActiveInterface string         `json:"active_interface"`
+	VPNInterfaces    []VPNInterface `json:"vpn_interfaces"`
+	ActiveInterface  string         `json:"active_interface"`
+	DefaultInterface string         `json:"default_interface"`
 
 	DHCPLeasesPath string `json:"dhcp_leases_path"`
 	EthersPath     string `json:"ethers_path"`
@@ -29,6 +30,20 @@ type Config struct {
 func (c *Config) GetActiveInterface() string {
 	if c.ActiveInterface != "" {
 		return c.ActiveInterface
+	}
+	// Fall back to default interface if set
+	if c.DefaultInterface != "" {
+		return c.DefaultInterface
+	}
+	if len(c.VPNInterfaces) > 0 {
+		return c.VPNInterfaces[0].Name
+	}
+	return c.VPNInterface
+}
+
+func (c *Config) GetDefaultInterface() string {
+	if c.DefaultInterface != "" {
+		return c.DefaultInterface
 	}
 	if len(c.VPNInterfaces) > 0 {
 		return c.VPNInterfaces[0].Name

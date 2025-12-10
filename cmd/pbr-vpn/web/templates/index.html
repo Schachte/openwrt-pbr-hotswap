@@ -541,7 +541,7 @@
                     </div>
                     <div class="device-actions">
                         <div class="toggle-wrapper">
-                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{end}}</span>
+                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{else}}{{$.DefaultInterface}}{{end}}</span>
                             {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
                             <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)" title="Switch to {{$.VPNInterface}}">
                                 ⇄
@@ -584,6 +584,7 @@
         let currentRenameMAC = null;
         let currentRenameElement = null;
         const activeInterface = '{{.VPNInterface}}';
+        const defaultInterface = '{{.DefaultInterface}}';
 
         async function toggleVPN(ip, checkbox) {
             const card = checkbox.closest('.device-card');
@@ -607,7 +608,7 @@
                         }
                     } else {
                         label.classList.remove('active');
-                        label.textContent = '';
+                        label.textContent = defaultInterface;
                     }
                 }
             } catch (err) {

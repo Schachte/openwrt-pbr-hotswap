@@ -4,6 +4,7 @@
     {"name": "vpn_amsterdam", "display_name": "Amsterdam"},
     {"name": "vpn_london", "display_name": "London"}
   ],
+  "default_interface": "br-lan",
   "dhcp_leases_path": "/tmp/dhcp.leases",
   "ethers_path": "/etc/ethers",
   "hosts_path": "/etc/hosts",
