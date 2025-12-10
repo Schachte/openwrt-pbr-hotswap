@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWRT PBR VPN Control</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo {
+            width: 36px;
+            height: 36px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .interface-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #888;
+            font-size: 0.875rem;
+        }
+
+        .interface-label span {
+            color: #888;
+        }
+
+        .interface-select {
+            background: rgba(0, 212, 170, 0.15);
+            color: #00d4aa;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: monospace;
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            cursor: pointer;
+        }
+
+        .interface-select:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+
+        .interface-select option {
+            background: #16213e;
+            color: #eee;
+        }
+
+        .interface-badge {
+            background: rgba(0, 212, 170, 0.15);
+            color: #00d4aa;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: monospace;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .toolbar h2 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #ccc;
+        }
+
+        .refresh-btn {
+            background: #0f3460;
+            color: #fff;
+            border: 1px solid #16213e;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-btn:hover {
+            background: #16213e;
+            border-color: #0f3460;
+        }
+
+        .refresh-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .device-card {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+        }
+
+        .device-card.favorite {
+            border-color: #f39c12;
+            background: linear-gradient(135deg, #16213e 0%, #1a2a3e 100%);
+        }
+
+        .device-card:hover {
+            border-color: #1a3a5c;
+            transform: translateY(-1px);
+        }
+
+        .device-card.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .device-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .device-primary {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .device-ip {
+            font-size: 1.125rem;
+            font-weight: 600;
+            font-family: monospace;
+            color: #fff;
+        }
+
+        .device-name {
+            color: #888;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .device-name:hover {
+            color: #aaa;
+            text-decoration: underline;
+        }
+
+        .device-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .device-mac {
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .source-dhcp {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+
+        .source-static {
+            background: rgba(155, 89, 182, 0.15);
+            color: #9b59b6;
+        }
+
+        .device-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.25rem;
+            transition: transform 0.2s;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .favorite-btn.active {
+            color: #f39c12;
+        }
+
+        .favorite-btn:not(.active) {
+            color: #555;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toggle-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #888;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .toggle-label.active {
+            color: #00d4aa;
+        }
+
+        .swap-btn {
+            background: rgba(243, 156, 18, 0.2);
+            border: 1px solid rgba(243, 156, 18, 0.4);
+            color: #f39c12;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .swap-btn:hover {
+            background: rgba(243, 156, 18, 0.3);
+            border-color: #f39c12;
+        }
+
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #2d3748;
+            border-radius: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #555;
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: #888;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #16213e;
+            padding: 1.5rem;
+            border-radius: 10px;
+            min-width: 300px;
+            border: 1px solid #0f3460;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            border: none;
+        }
+
+        .modal-btn.primary {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .modal-btn.secondary {
+            background: #2d3748;
+            color: #eee;
+        }
+
+        @media (max-width: 600px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .device-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .device-actions {
+                width: 100%;
+                justify-content: space-between;
+                padding-top: 0.5rem;
+                border-top: 1px solid #0f3460;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <img src="/static/logo.png" alt="Logo" class="header-logo">
+                <h1>PBR VPN Control</h1>
+            </div>
+            <div class="header-info">
+                {{if gt (len .VPNInterfaces) 1}}
+                <label class="interface-label">
+                    <span>Interface:</span>
+                    <select class="interface-select" onchange="setInterface(this.value)">
+                        {{range .VPNInterfaces}}
+                        <option value="{{.Name}}" {{if .Active}}selected{{end}}>{{if .DisplayName}}{{.DisplayName}}{{else}}{{.Name}}{{end}}</option>
+                        {{end}}
+                    </select>
+                </label>
+                {{else}}
+                <span class="interface-badge">{{.VPNInterface}}</span>
+                {{end}}
+                <span class="status-badge status-ok">
+                    <span class="status-dot"></span>
+                    Running
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="toolbar">
+            <h2>Network Devices</h2>
+            <button class="refresh-btn" onclick="location.reload()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                    <path d="M16 16h5v5"/>
+                </svg>
+                Refresh
+            </button>
+        </div>
+
+        <div class="device-list">
+            {{if .Devices}}
+                {{range .Devices}}
+                <div class="device-card {{if .Favorite}}favorite{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
+                    <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
+                        {{if .Favorite}}★{{else}}☆{{end}}
+                    </button>
+                    <div class="device-info">
+                        <div class="device-primary">
+                            <span class="device-ip">{{.IP}}</span>
+                            <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">({{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}})</span>
+                        </div>
+                        <div class="device-meta">
+                            <span class="device-mac">{{.MAC}}</span>
+                            <span class="source-badge source-{{.Source}}">{{.Source}}</span>
+                        </div>
+                    </div>
+                    <div class="device-actions">
+                        <div class="toggle-wrapper">
+                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{end}}</span>
+                            {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
+                            <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)" title="Switch to {{$.VPNInterface}}">
+                                ⇄
+                            </button>
+                            {{end}}
+                            <label class="toggle">
+                                <input type="checkbox" {{if .VPNEnabled}}checked{{end}}
+                                       onchange="toggleVPN('{{.IP}}', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            {{else}}
+                <div class="empty-state">
+                    <h3>No devices found</h3>
+                    <p>No network devices were discovered. Check DHCP leases or /etc/ethers configuration.</p>
+                </div>
+            {{end}}
+        </div>
+    </div>
+
+    <footer class="footer">
+        Last updated: {{.LastUpdated}} | v{{.Version}}
+    </footer>
+
+    <div class="modal" id="renameModal">
+        <div class="modal-content">
+            <h3>Rename Device</h3>
+            <input type="text" id="renameInput" placeholder="Enter custom name">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeRenameModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveRename()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRenameMAC = null;
+        let currentRenameElement = null;
+        const activeInterface = '{{.VPNInterface}}';
+
+        async function toggleVPN(ip, checkbox) {
+            const card = checkbox.closest('.device-card');
+            const label = card.querySelector('.toggle-label');
+            card.classList.add('loading');
+
+            try {
+                const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    checkbox.checked = !checkbox.checked;
+                    alert('Error: ' + data.error);
+                } else {
+                    if (data.vpn_enabled) {
+                        label.classList.add('active');
+                        if (data.device && data.device.vpn_interface) {
+                            label.textContent = data.device.vpn_interface;
+                        }
+                    } else {
+                        label.classList.remove('active');
+                        label.textContent = '';
+                    }
+                }
+            } catch (err) {
+                checkbox.checked = !checkbox.checked;
+                alert('Network error: ' + err.message);
+            } finally {
+                card.classList.remove('loading');
+            }
+        }
+
+        async function swapInterface(ip, btn) {
+            const card = btn.closest('.device-card');
+            const label = card.querySelector('.toggle-label');
+            card.classList.add('loading');
+
+            try {
+                const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    alert('Error: ' + data.error);
+                } else {
+                    // Update label to new interface
+                    if (data.device && data.device.vpn_interface) {
+                        label.textContent = data.device.vpn_interface;
+                    }
+                    // Remove swap button since now on active interface
+                    btn.remove();
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            } finally {
+                card.classList.remove('loading');
+            }
+        }
+
+        async function toggleFavorite(mac, btn) {
+            const card = btn.closest('.device-card');
+            const isCurrentlyFavorite = btn.classList.contains('active');
+            const newState = !isCurrentlyFavorite;
+
+            try {
+                const resp = await fetch('/api/favorite?mac=' + encodeURIComponent(mac) + '&favorite=' + newState, {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    if (data.favorite) {
+                        btn.classList.add('active');
+                        btn.innerHTML = '★';
+                        card.classList.add('favorite');
+                    } else {
+                        btn.classList.remove('active');
+                        btn.innerHTML = '☆';
+                        card.classList.remove('favorite');
+                    }
+                    // Reload to re-sort favorites to top
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        }
+
+        function renameDevice(mac, element) {
+            currentRenameMAC = mac;
+            currentRenameElement = element;
+            const currentName = element.textContent.replace(/[()]/g, '');
+            document.getElementById('renameInput').value = currentName === 'unknown' ? '' : currentName;
+            document.getElementById('renameModal').classList.add('active');
+            document.getElementById('renameInput').focus();
+        }
+
+        function closeRenameModal() {
+            document.getElementById('renameModal').classList.remove('active');
+            currentRenameMAC = null;
+            currentRenameElement = null;
+        }
+
+        async function saveRename() {
+            const name = document.getElementById('renameInput').value.trim();
+
+            try {
+                const resp = await fetch('/api/rename?mac=' + encodeURIComponent(currentRenameMAC) + '&name=' + encodeURIComponent(name), {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    currentRenameElement.textContent = '(' + (name || 'unknown') + ')';
+                    closeRenameModal();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        }
+
+        async function setInterface(name) {
+            try {
+                const resp = await fetch('/api/interface?name=' + encodeURIComponent(name), {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    alert('Error: ' + data.error);
+                }
+                location.reload();
+            } catch (err) {
+                alert('Network error: ' + err.message);
+                location.reload();
+            }
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeRenameModal();
+        });
+
+        // Close modal on background click
+        document.getElementById('renameModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) closeRenameModal();
+        });
+
+        // Submit rename on enter
+        document.getElementById('renameInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveRename();
+        });
+    </script>
+</body>
+</html>

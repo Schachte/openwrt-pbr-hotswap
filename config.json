@@ -1,0 +1,13 @@
+{
+  "listen_addr": ":8080",
+  "vpn_interfaces": [
+    {"name": "vpn_amsterdam", "display_name": "Amsterdam"},
+    {"name": "vpn_london", "display_name": "London"}
+  ],
+  "dhcp_leases_path": "/tmp/dhcp.leases",
+  "ethers_path": "/etc/ethers",
+  "hosts_path": "/etc/hosts",
+  "friendly_names": {
+    "192.168.1.198": "Ryan's iPhone"
+  }
+}
