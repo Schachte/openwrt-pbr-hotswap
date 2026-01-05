@@ -36,7 +36,7 @@ TLS_KEY=$(TLS_DIR)/key.pem
 ROUTER_TLS_PATH=/etc/pbr-vpn
 
 .PHONY: all build build-linux-arm64 build-linux-amd64 build-all clean test deps \
-        deploy deploy-amd64 health logs logs-f stop install-service help run \
+        deploy deploy-no-tls deploy-amd64 health health-no-tls logs logs-f stop install-service help run \
         generate-certs update-screenshot
 
 all: build
@@ -167,6 +167,30 @@ deploy: build-linux-arm64 generate-certs
 	@sleep 3
 	@$(MAKE) health --no-print-directory
 
+deploy-no-tls: build-linux-arm64
+	@echo "Deploying (no TLS) to $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)..."
+	@echo ""
+	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "mkdir -p $(ROUTER_PATH)"
+	@echo "Stopping existing service (if running)..."
+	-ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "killall $(BINARY_NAME) 2>/dev/null" || true
+	@echo "Copying binary..."
+	scp $(SCP_OPTS) $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)/$(BINARY_NAME)
+	@if [ -f $(CONFIG_FILE) ]; then \
+		echo "Copying $(CONFIG_FILE)..."; \
+		scp $(SCP_OPTS) $(CONFIG_FILE) $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)/config.json; \
+	fi
+	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "chmod +x $(ROUTER_PATH)/$(BINARY_NAME)"
+	@echo "Starting server (no TLS)..."
+	@if [ -f $(CONFIG_FILE) ]; then \
+		ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "$(ROUTER_PATH)/$(BINARY_NAME) -config $(ROUTER_PATH)/config.json -tls=false > $(ROUTER_PATH)/pbr-vpn.log 2>&1 &"; \
+	else \
+		ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "$(ROUTER_PATH)/$(BINARY_NAME) -listen :$(ROUTER_PORT) -tls=false > $(ROUTER_PATH)/pbr-vpn.log 2>&1 &"; \
+	fi
+	@echo ""
+	@echo "Waiting for server to start..."
+	@sleep 3
+	@$(MAKE) health-no-tls --no-print-directory
+
 deploy-amd64: build-linux-amd64
 	@echo "Deploying AMD64 to $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)..."
 	@echo ""
@@ -181,6 +205,11 @@ deploy-amd64: build-linux-amd64
 health:
 	@echo "Checking health at https://$(ROUTER_HOST):$(ROUTER_PORT)/health ..."
 	@curl -sfk https://$(ROUTER_HOST):$(ROUTER_PORT)/health && echo "" && echo "Server is healthy!" || \
+		(echo "Health check failed! Server may not be running." && exit 1)
+
+health-no-tls:
+	@echo "Checking health at http://$(ROUTER_HOST):$(ROUTER_PORT)/health ..."
+	@curl -sf http://$(ROUTER_HOST):$(ROUTER_PORT)/health && echo "" && echo "Server is healthy!" || \
 		(echo "Health check failed! Server may not be running." && exit 1)
 
 logs:
