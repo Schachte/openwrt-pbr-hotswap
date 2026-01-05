@@ -1074,12 +1074,8 @@
                                 <span class="ip-tooltip-value" id="tipIp">-</span>
                             </div>
                             <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Country</span>
-                                <span class="ip-tooltip-value" id="tipCountry">-</span>
-                            </div>
-                            <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Datacenter</span>
-                                <span class="ip-tooltip-value" id="tipColo">-</span>
+                                <span class="ip-tooltip-label">Location</span>
+                                <span class="ip-tooltip-value" id="tipLocation">-</span>
                             </div>
                         </div>
                     </div>
@@ -1268,24 +1264,24 @@
         async function fetchIPFromEndpoints() {
             const endpoints = [
                 {
+                    url: 'http://ip-api.com/json/?fields=query,country,countryCode,regionName,city',
+                    parse: (text) => {
+                        const data = JSON.parse(text);
+                        return { ip: data.query, country_code: data.countryCode, city: data.city, region: data.regionName, country: data.country };
+                    }
+                },
+                {
                     url: 'https://1.1.1.1/cdn-cgi/trace',
                     parse: (text) => {
                         const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
-                        return { ip: data.ip, country_code: data.loc, colo: data.colo };
+                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null };
                     }
                 },
                 {
                     url: 'https://cloudflare.com/cdn-cgi/trace',
                     parse: (text) => {
                         const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
-                        return { ip: data.ip, country_code: data.loc, colo: data.colo };
-                    }
-                },
-                {
-                    url: 'https://api.ipify.org?format=json',
-                    parse: (text) => {
-                        const data = JSON.parse(text);
-                        return { ip: data.ip, country_code: null, colo: null };
+                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null };
                     }
                 }
             ];
@@ -1318,10 +1314,10 @@
             if (cachedIPData && !expectDifferentFrom) {
                 ipEl.textContent = cachedIPData.ip;
                 flagEl.textContent = cachedIPData.country_code ? countryToFlag(cachedIPData.country_code) : '🌐';
-                countryEl.textContent = cachedIPData.country_code || '';
+                countryEl.textContent = cachedIPData.city || cachedIPData.country_code || '';
                 document.getElementById('tipIp').textContent = cachedIPData.ip;
-                document.getElementById('tipCountry').textContent = cachedIPData.country_code || '-';
-                document.getElementById('tipColo').textContent = cachedIPData.colo || '-';
+                const location = [cachedIPData.city, cachedIPData.region, cachedIPData.country].filter(Boolean).join(', ') || cachedIPData.country_code || '-';
+                document.getElementById('tipLocation').textContent = location;
                 return cachedIPData.ip;
             }
 
@@ -1331,7 +1327,7 @@
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     const data = await fetchIPFromEndpoints();
-                    const { ip, country_code, colo } = data;
+                    const { ip, country_code, city, region, country } = data;
 
                     if (ip) {
                         // If we expect a different IP and got the same one, retry with increasing delay
@@ -1346,12 +1342,12 @@
 
                         ipEl.textContent = ip;
                         flagEl.textContent = country_code ? countryToFlag(country_code) : '🌐';
-                        countryEl.textContent = country_code || '';
+                        countryEl.textContent = city || country_code || '';
 
                         // Update tooltip
                         document.getElementById('tipIp').textContent = ip;
-                        document.getElementById('tipCountry').textContent = country_code || '-';
-                        document.getElementById('tipColo').textContent = colo || '-';
+                        const location = [city, region, country].filter(Boolean).join(', ') || country_code || '-';
+                        document.getElementById('tipLocation').textContent = location;
                         container.classList.remove('loading');
                         ipFetchInProgress = false;
                         return ip;
@@ -1383,10 +1379,10 @@
                     cachedIPData = JSON.parse(savedIP);
                     document.getElementById('ipAddress').textContent = cachedIPData.ip;
                     document.getElementById('ipFlag').textContent = cachedIPData.country_code ? countryToFlag(cachedIPData.country_code) : '🌐';
-                    document.getElementById('ipCountry').textContent = cachedIPData.country_code || '';
+                    document.getElementById('ipCountry').textContent = cachedIPData.city || cachedIPData.country_code || '';
                     document.getElementById('tipIp').textContent = cachedIPData.ip;
-                    document.getElementById('tipCountry').textContent = cachedIPData.country_code || '-';
-                    document.getElementById('tipColo').textContent = cachedIPData.colo || '-';
+                    const location = [cachedIPData.city, cachedIPData.region, cachedIPData.country].filter(Boolean).join(', ') || cachedIPData.country_code || '-';
+                    document.getElementById('tipLocation').textContent = location;
                 } catch (e) {}
                 sessionStorage.removeItem('cachedIP');
             }
