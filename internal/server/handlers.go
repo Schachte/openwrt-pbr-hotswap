@@ -37,6 +37,8 @@ type IndexData struct {
 	VPNInterfaces    []InterfaceInfo
 	ServiceRunning   bool
 	Devices          []device.Device
+	HiddenCount      int
+	VisibleCount     int
 	LastUpdated      string
 	Version          string
 }
@@ -59,6 +61,12 @@ type RenameResponse struct {
 	CustomName string `json:"custom_name"`
 }
 
+type HiddenResponse struct {
+	Success bool   `json:"success"`
+	MAC     string `json:"mac"`
+	Hidden  bool   `json:"hidden"`
+}
+
 type InterfacesResponse struct {
 	Success    bool            `json:"success"`
 	Interfaces []InterfaceInfo `json:"interfaces"`
@@ -73,6 +81,14 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	devices = s.enrichDevices(devices)
 
+	hiddenCount := 0
+	for _, d := range devices {
+		if d.Hidden {
+			hiddenCount++
+		}
+	}
+	visibleCount := len(devices) - hiddenCount
+
 	interfaces := s.buildInterfaceList()
 
 	data := IndexData{
@@ -81,6 +97,8 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		VPNInterfaces:    interfaces,
 		ServiceRunning:   true,
 		Devices:          devices,
+		HiddenCount:      hiddenCount,
+		VisibleCount:     visibleCount,
 		LastUpdated:      time.Now().Format("2006-01-02 15:04:05"),
 		Version:          s.version,
 	}
@@ -252,6 +270,30 @@ func (s *Server) handleRename(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) handleHidden(w http.ResponseWriter, r *http.Request) {
+	mac := r.URL.Query().Get("mac")
+	if mac == "" {
+		writeError(w, "MAC address required", http.StatusBadRequest)
+		return
+	}
+
+	hiddenStr := r.URL.Query().Get("hidden")
+	hidden := hiddenStr == "true" || hiddenStr == "1"
+
+	if err := s.store.SetHidden(mac, hidden); err != nil {
+		log.Printf("Error setting hidden for %s: %v", mac, err)
+		writeError(w, "Failed to set hidden", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(HiddenResponse{
+		Success: true,
+		MAC:     mac,
+		Hidden:  hidden,
+	})
+}
+
 func (s *Server) handleListInterfaces(w http.ResponseWriter, r *http.Request) {
 	interfaces := s.buildInterfaceList()
 	w.Header().Set("Content-Type", "application/json")
@@ -302,6 +344,7 @@ func (s *Server) enrichDevices(devices []device.Device) []device.Device {
 		if p, ok := prefs[devices[i].MAC]; ok {
 			devices[i].CustomName = p.CustomName
 			devices[i].Favorite = p.Favorite
+			devices[i].Hidden = p.Hidden
 		}
 		if devices[i].Favorite {
 			favorites = append(favorites, devices[i])

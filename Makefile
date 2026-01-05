@@ -165,44 +165,41 @@ stop:
 	@echo "Server stopped"
 
 install-service: deploy
-	@echo "Installing init.d service on router..."
-	@ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "\
-		echo '#!/bin/sh /etc/rc.common' > /etc/init.d/pbr-vpn && \
-		echo '' >> /etc/init.d/pbr-vpn && \
-		echo 'START=99' >> /etc/init.d/pbr-vpn && \
-		echo 'STOP=10' >> /etc/init.d/pbr-vpn && \
-		echo 'USE_PROCD=1' >> /etc/init.d/pbr-vpn && \
-		echo '' >> /etc/init.d/pbr-vpn && \
-		echo 'PROG=$(ROUTER_PATH)/$(BINARY_NAME)' >> /etc/init.d/pbr-vpn && \
-		echo 'PORT=$(ROUTER_PORT)' >> /etc/init.d/pbr-vpn && \
-		echo '' >> /etc/init.d/pbr-vpn && \
-		echo 'start_service() {' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_open_instance' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_set_param command \$$PROG -config $(ROUTER_PATH)/config.json' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_set_param respawn' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_set_param stdout 1' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_set_param stderr 1' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_set_param pidfile /var/run/pbr-vpn.pid' >> /etc/init.d/pbr-vpn && \
-		echo '    procd_close_instance' >> /etc/init.d/pbr-vpn && \
-		echo '}' >> /etc/init.d/pbr-vpn && \
-		echo '' >> /etc/init.d/pbr-vpn && \
-		echo 'stop_service() {' >> /etc/init.d/pbr-vpn && \
-		echo '    killall $(BINARY_NAME) 2>/dev/null' >> /etc/init.d/pbr-vpn && \
-		echo '}' >> /etc/init.d/pbr-vpn && \
-		echo '' >> /etc/init.d/pbr-vpn && \
-		echo 'reload_service() {' >> /etc/init.d/pbr-vpn && \
-		echo '    stop_service' >> /etc/init.d/pbr-vpn && \
-		echo '    start_service' >> /etc/init.d/pbr-vpn && \
-		echo '}' >> /etc/init.d/pbr-vpn"
-	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "chmod +x /etc/init.d/pbr-vpn"
-	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "/etc/init.d/pbr-vpn enable"
+	@echo "Installing init.d service with auto-restart on router..."
+	@ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "printf '%s\n' \
+		'#!/bin/sh /etc/rc.common' \
+		'' \
+		'START=99' \
+		'STOP=10' \
+		'USE_PROCD=1' \
+		'' \
+		'PROG=$(ROUTER_PATH)/$(BINARY_NAME)' \
+		'CONFIG=$(ROUTER_PATH)/config.json' \
+		'' \
+		'start_service() {' \
+		'    procd_open_instance' \
+		'    procd_set_param command \$$PROG -config \$$CONFIG' \
+		'    procd_set_param respawn 3600 5 5' \
+		'    procd_set_param stdout 1' \
+		'    procd_set_param stderr 1' \
+		'    procd_set_param pidfile /var/run/pbr-vpn.pid' \
+		'    procd_close_instance' \
+		'}' \
+		'' \
+		'stop_service() {' \
+		'    killall $(BINARY_NAME) 2>/dev/null' \
+		'}' > /etc/init.d/pbr-vpn"
+	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "chmod +x /etc/init.d/pbr-vpn && /etc/init.d/pbr-vpn enable && /etc/init.d/pbr-vpn restart"
+	@sleep 2
+	@$(MAKE) health --no-print-directory
 	@echo ""
-	@echo "Service installed and enabled!"
+	@echo "Service installed with auto-start and auto-restart!"
+	@echo "  - Starts on boot (S99)"
+	@echo "  - Auto-restarts if crashed (respawn)"
+	@echo ""
 	@echo "Commands:"
-	@echo "  /etc/init.d/pbr-vpn start   - Start the service"
-	@echo "  /etc/init.d/pbr-vpn stop    - Stop the service"
-	@echo "  /etc/init.d/pbr-vpn restart - Restart the service"
-	@echo "  /etc/init.d/pbr-vpn disable - Disable auto-start on boot"
+	@echo "  /etc/init.d/pbr-vpn start|stop|restart"
+	@echo "  /etc/init.d/pbr-vpn disable  (disable auto-start)"
 
 STRIP_TOOL=scripts/stripcomments
 

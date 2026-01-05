@@ -2,6 +2,7 @@ package pbr
 
 import (
 	"bufio"
+	"fmt"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -15,7 +16,13 @@ type CommandExecutor interface {
 type DefaultExecutor struct{}
 
 func (e *DefaultExecutor) Execute(name string, args ...string) ([]byte, error) {
-	return exec.Command(name, args...).CombinedOutput()
+	cmd := exec.Command(name, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		cmdStr := name + " " + strings.Join(args, " ")
+		return output, fmt.Errorf("command '%s' failed: %w\nOutput: %s", cmdStr, err, strings.TrimSpace(string(output)))
+	}
+	return output, nil
 }
 
 type Policy struct {

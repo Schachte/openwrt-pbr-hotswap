@@ -17,6 +17,7 @@ type Device struct {
 	VPNEnabled   bool         `json:"vpn_enabled"`
 	VPNInterface string       `json:"vpn_interface,omitempty"`
 	Favorite     bool         `json:"favorite"`
+	Hidden       bool         `json:"hidden"`
 	PolicyName   string       `json:"policy_name,omitempty"`
 	LeaseExpiry  int64        `json:"lease_expiry,omitempty"`
 }

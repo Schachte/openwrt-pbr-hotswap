@@ -11,6 +11,7 @@ type DevicePrefs struct {
 	MAC        string `json:"mac"`
 	CustomName string `json:"custom_name"`
 	Favorite   bool   `json:"favorite"`
+	Hidden     bool   `json:"hidden"`
 }
 
 type storeData struct {
@@ -101,6 +102,19 @@ func (s *Store) SetCustomName(mac string, name string) error {
 		s.data.Devices[mac] = p
 	}
 	p.CustomName = name
+	return s.save()
+}
+
+func (s *Store) SetHidden(mac string, hidden bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	p, ok := s.data.Devices[mac]
+	if !ok {
+		p = &DevicePrefs{MAC: mac}
+		s.data.Devices[mac] = p
+	}
+	p.Hidden = hidden
 	return s.save()
 }
 

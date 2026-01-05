@@ -70,6 +70,11 @@
             color: #888;
         }
 
+        .interface-label {
+            position: relative;
+            z-index: 100;
+        }
+
         .interface-select {
             background: rgba(0, 212, 170, 0.15);
             color: #00d4aa;
@@ -87,8 +92,9 @@
         }
 
         .interface-select option {
-            background: #16213e;
+            background: #1a1a2e;
             color: #eee;
+            padding: 0.5rem;
         }
 
         .interface-badge {
@@ -97,6 +103,113 @@
             padding: 0.375rem 0.75rem;
             border-radius: 6px;
             font-size: 0.875rem;
+            font-family: monospace;
+        }
+
+        .public-ip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(52, 152, 219, 0.15);
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .public-ip.loading {
+            opacity: 0.6;
+        }
+
+        .public-ip .flag {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .public-ip .ip-address {
+            font-family: monospace;
+            color: #3498db;
+        }
+
+        .public-ip .country {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .public-ip .refresh-ip {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+
+        .public-ip .refresh-ip:hover {
+            color: #3498db;
+        }
+
+        .public-ip.loading .refresh-ip {
+            animation: spin 1s linear infinite;
+        }
+
+        .public-ip .ip-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: help;
+            position: relative;
+        }
+
+        .ip-tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            min-width: 220px;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            font-size: 0.8rem;
+            text-align: left;
+        }
+
+        .ip-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #0f3460;
+        }
+
+        .public-ip .ip-info:hover .ip-tooltip {
+            display: block;
+        }
+
+        .ip-tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ip-tooltip-row:last-child {
+            border-bottom: none;
+        }
+
+        .ip-tooltip-label {
+            color: #888;
+        }
+
+        .ip-tooltip-value {
+            color: #eee;
             font-family: monospace;
         }
 
@@ -145,6 +258,12 @@
             font-size: 1.125rem;
             font-weight: 500;
             color: #ccc;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .refresh-btn {
@@ -198,8 +317,27 @@
         }
 
         .device-card.loading {
-            opacity: 0.6;
+            opacity: 0.7;
             pointer-events: none;
+        }
+
+        .device-card.loading .toggle-wrapper::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 212, 170, 0.3);
+            border-top-color: #00d4aa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        .device-card.loading .toggle {
+            opacity: 0.4;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .device-info {
@@ -291,6 +429,134 @@
 
         .favorite-btn:not(.active) {
             color: #555;
+        }
+
+        .menu-container {
+            position: relative;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.25rem 0.5rem;
+            color: #666;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .menu-btn:hover {
+            color: #aaa;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            min-width: 140px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 0.875rem;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #16213e;
+            color: #fff;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .dropdown-item:only-child {
+            border-radius: 6px;
+        }
+
+        .collapsible-section {
+            margin-top: 2rem;
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #0f3460;
+            border: 1px solid #16213e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #16213e;
+        }
+
+        .collapsible-header h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #888;
+            flex: 1;
+        }
+
+        .hidden-count {
+            background: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .collapsible-arrow {
+            color: #666;
+            transition: transform 0.2s;
+        }
+
+        .collapsible-header.expanded .collapsible-arrow {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            display: none;
+            padding-top: 0.75rem;
+        }
+
+        .collapsible-content.expanded {
+            display: block;
+        }
+
+        .collapsible-content .device-card {
+            opacity: 0.7;
+        }
+
+        .collapsible-content .device-card:hover {
+            opacity: 1;
         }
 
         .toggle-wrapper {
@@ -511,20 +777,63 @@
     <div class="container">
         <div class="toolbar">
             <h2>Network Devices</h2>
-            <button class="refresh-btn" onclick="location.reload()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
-                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-                    <path d="M16 16h5v5"/>
-                </svg>
-                Refresh
-            </button>
+            <div class="toolbar-right">
+                <div class="public-ip loading" id="publicIp">
+                    <div class="ip-info">
+                        <span class="flag" id="ipFlag">🌐</span>
+                        <span class="ip-address" id="ipAddress">Loading...</span>
+                        <span class="country" id="ipCountry"></span>
+                        <div class="ip-tooltip" id="ipTooltip">
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">IP</span>
+                                <span class="ip-tooltip-value" id="tipIp">-</span>
+                            </div>
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">City</span>
+                                <span class="ip-tooltip-value" id="tipCity">-</span>
+                            </div>
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">Region</span>
+                                <span class="ip-tooltip-value" id="tipRegion">-</span>
+                            </div>
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">Country</span>
+                                <span class="ip-tooltip-value" id="tipCountry">-</span>
+                            </div>
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">ISP</span>
+                                <span class="ip-tooltip-value" id="tipIsp">-</span>
+                            </div>
+                            <div class="ip-tooltip-row">
+                                <span class="ip-tooltip-label">Timezone</span>
+                                <span class="ip-tooltip-value" id="tipTimezone">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="refresh-ip" onclick="fetchPublicIP()" title="Refresh IP">↻</button>
+                </div>
+                <button class="refresh-btn" onclick="location.reload()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                        <path d="M16 16h5v5"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
         </div>
 
         <div class="device-list">
             {{if .Devices}}
+                {{if eq .VisibleCount 0}}
+                <div class="empty-state">
+                    <h3>No visible devices</h3>
+                    <p>All devices are hidden. Check the "Hidden Devices" section below.</p>
+                </div>
+                {{else}}
                 {{range .Devices}}
+                {{if not .Hidden}}
                 <div class="device-card {{if .Favorite}}favorite{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
                     <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
                         {{if .Favorite}}★{{else}}☆{{end}}
@@ -553,8 +862,16 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
+                        <div class="menu-container">
+                            <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">⋮</button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" onclick="toggleHidden('{{.MAC}}', true)">Hide device</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                {{end}}
+                {{end}}
                 {{end}}
             {{else}}
                 <div class="empty-state">
@@ -563,6 +880,60 @@
                 </div>
             {{end}}
         </div>
+
+        {{if gt .HiddenCount 0}}
+        <div class="collapsible-section">
+            <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                <h3>Hidden Devices</h3>
+                <span class="hidden-count">{{.HiddenCount}}</span>
+                <span class="collapsible-arrow">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="device-list">
+                    {{range .Devices}}
+                    {{if .Hidden}}
+                    <div class="device-card {{if .Favorite}}favorite{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
+                        <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
+                            {{if .Favorite}}★{{else}}☆{{end}}
+                        </button>
+                        <div class="device-info">
+                            <div class="device-primary">
+                                <span class="device-ip">{{.IP}}</span>
+                                <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">({{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}})</span>
+                            </div>
+                            <div class="device-meta">
+                                <span class="device-mac">{{.MAC}}</span>
+                                <span class="source-badge source-{{.Source}}">{{.Source}}</span>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <div class="toggle-wrapper">
+                                <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{else}}{{$.DefaultInterface}}{{end}}</span>
+                                {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
+                                <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)" title="Switch to {{$.VPNInterface}}">
+                                    ⇄
+                                </button>
+                                {{end}}
+                                <label class="toggle">
+                                    <input type="checkbox" {{if .VPNEnabled}}checked{{end}}
+                                           onchange="toggleVPN('{{.IP}}', this)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="menu-container">
+                                <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">⋮</button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item" onclick="toggleHidden('{{.MAC}}', false)">Unhide device</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        {{end}}
     </div>
 
     <footer class="footer">
@@ -586,10 +957,78 @@
         const activeInterface = '{{.VPNInterface}}';
         const defaultInterface = '{{.DefaultInterface}}';
 
+        // Country code to flag emoji
+        function countryToFlag(countryCode) {
+            if (!countryCode) return '🌐';
+            const codePoints = countryCode
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt(0));
+            return String.fromCodePoint(...codePoints);
+        }
+
+        async function fetchPublicIP() {
+            const container = document.getElementById('publicIp');
+            const ipEl = document.getElementById('ipAddress');
+            const flagEl = document.getElementById('ipFlag');
+            const countryEl = document.getElementById('ipCountry');
+
+            container.classList.add('loading');
+
+            try {
+                // Use ip-api.com (free, no key required, returns full geo info)
+                const resp = await fetch('http://ip-api.com/json/?fields=query,country,countryCode,city,regionName,isp,timezone', { cache: 'no-store' });
+                const data = await resp.json();
+
+                if (data.query) {
+                    ipEl.textContent = data.query;
+                    flagEl.textContent = countryToFlag(data.countryCode);
+                    countryEl.textContent = data.country || '';
+
+                    // Update tooltip
+                    document.getElementById('tipIp').textContent = data.query;
+                    document.getElementById('tipCity').textContent = data.city || '-';
+                    document.getElementById('tipRegion').textContent = data.regionName || '-';
+                    document.getElementById('tipCountry').textContent = data.country || '-';
+                    document.getElementById('tipIsp').textContent = data.isp || '-';
+                    document.getElementById('tipTimezone').textContent = data.timezone || '-';
+                } else {
+                    throw new Error('No IP returned');
+                }
+            } catch (err) {
+                // Fallback to ipify (IP only, no country)
+                try {
+                    const resp = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+                    const data = await resp.json();
+                    ipEl.textContent = data.ip;
+                    flagEl.textContent = '🌐';
+                    countryEl.textContent = '';
+                    document.getElementById('tipIp').textContent = data.ip;
+                    document.getElementById('tipCity').textContent = '-';
+                    document.getElementById('tipRegion').textContent = '-';
+                    document.getElementById('tipCountry').textContent = '-';
+                    document.getElementById('tipIsp').textContent = '-';
+                    document.getElementById('tipTimezone').textContent = '-';
+                } catch (e) {
+                    ipEl.textContent = 'Error';
+                    flagEl.textContent = '⚠️';
+                    countryEl.textContent = '';
+                }
+            } finally {
+                container.classList.remove('loading');
+            }
+        }
+
+        // Fetch IP on page load
+        fetchPublicIP();
+
         async function toggleVPN(ip, checkbox) {
             const card = checkbox.closest('.device-card');
             const label = card.querySelector('.toggle-label');
+            const ipContainer = document.getElementById('publicIp');
+
             card.classList.add('loading');
+            ipContainer.classList.add('loading');
 
             try {
                 const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
@@ -599,6 +1038,7 @@
 
                 if (!data.success) {
                     checkbox.checked = !checkbox.checked;
+                    ipContainer.classList.remove('loading');
                     alert('Error: ' + data.error);
                 } else {
                     if (data.vpn_enabled) {
@@ -610,9 +1050,14 @@
                         label.classList.remove('active');
                         label.textContent = defaultInterface;
                     }
+                    // Refetch public IP after VPN change (wait for routing to take effect)
+                    setTimeout(fetchPublicIP, 3000);
+                    // Refetch again after longer delay in case routing takes time
+                    setTimeout(fetchPublicIP, 6000);
                 }
             } catch (err) {
                 checkbox.checked = !checkbox.checked;
+                ipContainer.classList.remove('loading');
                 alert('Network error: ' + err.message);
             } finally {
                 card.classList.remove('loading');
@@ -622,7 +1067,10 @@
         async function swapInterface(ip, btn) {
             const card = btn.closest('.device-card');
             const label = card.querySelector('.toggle-label');
+            const ipContainer = document.getElementById('publicIp');
+
             card.classList.add('loading');
+            ipContainer.classList.add('loading');
 
             try {
                 const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
@@ -631,6 +1079,7 @@
                 const data = await resp.json();
 
                 if (!data.success) {
+                    ipContainer.classList.remove('loading');
                     alert('Error: ' + data.error);
                 } else {
                     // Update label to new interface
@@ -639,8 +1088,12 @@
                     }
                     // Remove swap button since now on active interface
                     btn.remove();
+                    // Refetch public IP after interface swap (wait for routing to take effect)
+                    setTimeout(fetchPublicIP, 3000);
+                    setTimeout(fetchPublicIP, 6000);
                 }
             } catch (err) {
+                ipContainer.classList.remove('loading');
                 alert('Network error: ' + err.message);
             } finally {
                 card.classList.remove('loading');
@@ -730,9 +1183,62 @@
             }
         }
 
+        function toggleMenu(event, btn) {
+            event.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            const wasActive = dropdown.classList.contains('active');
+
+            // Close all open menus
+            document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+
+            // Toggle this menu if it wasn't already open
+            if (!wasActive) {
+                dropdown.classList.add('active');
+            }
+        }
+
+        async function toggleHidden(mac, hidden) {
+            try {
+                const resp = await fetch('/api/hidden?mac=' + encodeURIComponent(mac) + '&hidden=' + hidden, {
+                    method: 'POST'
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        }
+
+        function toggleCollapsible(header) {
+            header.classList.toggle('expanded');
+            const content = header.nextElementSibling;
+            content.classList.toggle('expanded');
+        }
+
+        // Close dropdown menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-container')) {
+                document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+            }
+        });
+
         // Close modal on escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeRenameModal();
+            if (e.key === 'Escape') {
+                closeRenameModal();
+                document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+            }
         });
 
         // Close modal on background click

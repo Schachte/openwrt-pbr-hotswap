@@ -31,10 +31,7 @@ func (c *Config) GetActiveInterface() string {
 	if c.ActiveInterface != "" {
 		return c.ActiveInterface
 	}
-	// Fall back to default interface if set
-	if c.DefaultInterface != "" {
-		return c.DefaultInterface
-	}
+	// Fall back to first VPN interface (not default_interface which is typically br-lan)
 	if len(c.VPNInterfaces) > 0 {
 		return c.VPNInterfaces[0].Name
 	}

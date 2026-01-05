@@ -57,6 +57,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/toggle", s.handleToggleDevice)
 	s.mux.HandleFunc("/api/favorite", s.handleFavorite)
 	s.mux.HandleFunc("/api/rename", s.handleRename)
+	s.mux.HandleFunc("/api/hidden", s.handleHidden)
 	s.mux.HandleFunc("/api/interfaces", s.handleListInterfaces)
 	s.mux.HandleFunc("/api/interface", s.handleSetInterface)
 }
