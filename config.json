@@ -1,8 +1,8 @@
 {
   "listen_addr": ":8080",
   "vpn_interfaces": [
-    {"name": "vpn_amsterdam", "display_name": "Amsterdam"},
-    {"name": "vpn_nyc", "display_name": "New York City"}
+    {"name": "vpn_amsterdam", "display_name": "🇳🇱 Amsterdam"},
+    {"name": "vpn_nyc", "display_name": "🇺🇸 New York City"}
   ],
   "default_interface": "br-lan",
   "dhcp_leases_path": "/tmp/dhcp.leases",

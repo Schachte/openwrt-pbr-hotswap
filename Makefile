@@ -19,7 +19,7 @@ ROUTER_HOST ?= 192.168.1.1
 ROUTER_USER ?= root
 ROUTER_PATH ?= /apps
 ROUTER_PORT ?= 8080
-SSH_KEY ?=
+SSH_KEY ?= ~/.ssh/openwrt
 CONFIG_FILE ?= config.json
 
 ifdef SSH_KEY
@@ -163,8 +163,8 @@ deploy: build-linux-arm64 generate-certs
 		ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "$(ROUTER_PATH)/$(BINARY_NAME) -listen :$(ROUTER_PORT) > $(ROUTER_PATH)/pbr-vpn.log 2>&1 &"; \
 	fi
 	@echo ""
-	@echo "Waiting for server to start..."
-	@sleep 2
+	@echo "Waiting for server to start (includes PBR reload)..."
+	@sleep 7
 	@$(MAKE) health --no-print-directory
 
 deploy-amd64: build-linux-amd64

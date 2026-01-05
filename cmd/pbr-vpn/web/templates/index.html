@@ -1203,7 +1203,7 @@
             return Promise.any(promises);
         }
 
-        async function fetchPublicIP(expectDifferentFrom = null, maxRetries = 3) {
+        async function fetchPublicIP(expectDifferentFrom = null, maxRetries = 5) {
             const container = document.getElementById('publicIp');
             const ipEl = document.getElementById('ipAddress');
             const flagEl = document.getElementById('ipFlag');
@@ -1228,9 +1228,10 @@
                     const { ip, country_code, colo } = data;
 
                     if (ip) {
-                        // If we expect a different IP and got the same one, retry
+                        // If we expect a different IP and got the same one, retry with increasing delay
                         if (expectDifferentFrom && ip === expectDifferentFrom && attempt < maxRetries) {
-                            await new Promise(r => setTimeout(r, 1000));
+                            // Wait longer each attempt: 500ms, 1s, 1.5s, 2s...
+                            await new Promise(r => setTimeout(r, 500 * attempt));
                             continue;
                         }
 
@@ -1257,7 +1258,7 @@
                         countryEl.textContent = '';
                         container.classList.remove('loading');
                     }
-                    // Wait 300ms before retry
+                    // Wait 300ms before retry on error
                     await new Promise(r => setTimeout(r, 300));
                 }
             }
@@ -1298,15 +1299,15 @@
                         // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
                             cachedIPData = null;
-                            setTimeout(() => fetchPublicIP(initialIP, 3), 1000);
+                            fetchPublicIP(initialIP);
                         }
                     } else {
                         label.classList.remove('active');
                         label.textContent = defaultInterface;
-                        // Clear cache and refetch IP if toggling current device (faster for off)
+                        // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
                             cachedIPData = null;
-                            setTimeout(() => fetchPublicIP(initialIP, 3), 250);
+                            fetchPublicIP(initialIP);
                         }
                     }
                 }
@@ -1345,9 +1346,10 @@
                         label.textContent = data.device.vpn_interface;
                     }
                     btn.remove();
-                    // Only refetch IP if swapping current device
+                    // Clear cache and refetch IP if swapping current device
                     if (isCurrentDevice) {
-                        setTimeout(() => fetchPublicIP(initialIP, 3), 1000);
+                        cachedIPData = null;
+                        fetchPublicIP(initialIP);
                     }
                 }
             } catch (err) {
