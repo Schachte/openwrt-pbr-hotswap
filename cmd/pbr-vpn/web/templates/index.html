@@ -1065,7 +1065,7 @@
                     <span class="ip-label">Current Device IPv4:</span>
                     <div class="ip-info" onclick="toggleIpTooltip(event)">
                         <span class="flag" id="ipFlag">🌐</span>
-                        <span class="ip-address" id="ipAddress" onclick="copyText(this)" title="Click to copy">—</span>
+                        <span class="ip-address" id="ipAddress" onclick="copyText(this, null, event)" title="Click to copy">—</span>
                         <span class="country" id="ipCountry"></span>
                         <span class="info-icon">ⓘ</span>
                         <div class="ip-tooltip" id="ipTooltip">
@@ -1111,11 +1111,11 @@
                     </button>
                     <div class="device-info">
                         <div class="device-primary">
-                            <span class="device-ip" onclick="copyText(this, '{{.IP}}')" title="Click to copy">{{.IP}}</span>
+                            <span class="device-ip" onclick="copyText(this, '{{.IP}}', event)" title="Click to copy">{{.IP}}</span>
                             <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
                         </div>
                         <div class="device-meta">
-                            <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}')"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
+                            <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}', event)"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
                             <span class="source-badge source-{{.Source}}">{{.Source}}</span>
                         </div>
                     </div>
@@ -1170,11 +1170,11 @@
                         </button>
                         <div class="device-info">
                             <div class="device-primary">
-                                <span class="device-ip" onclick="copyText(this, '{{.IP}}')" title="Click to copy">{{.IP}}</span>
+                                <span class="device-ip" onclick="copyText(this, '{{.IP}}', event)" title="Click to copy">{{.IP}}</span>
                                 <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
                             </div>
                             <div class="device-meta">
-                                <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}')"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
+                                <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}', event)"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
                                 <span class="source-badge source-{{.Source}}">{{.Source}}</span>
                             </div>
                         </div>
@@ -1655,14 +1655,31 @@
             if (e.key === 'Enter') saveRename();
         });
 
-        function copyMAC(el, mac) {
-            navigator.clipboard.writeText(mac).then(() => {
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            // Fallback for HTTP
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return Promise.resolve();
+        }
+
+        function copyMAC(el, mac, event) {
+            if (event) event.stopPropagation();
+            copyToClipboard(mac).then(() => {
                 const macText = el.querySelector('.mac-text');
                 const reveal = el.querySelector('.mac-reveal');
                 const width = el.offsetWidth;
                 el.style.minWidth = width + 'px';
                 el.style.textAlign = 'center';
-                macText.textContent = 'MAC Copied';
+                macText.textContent = 'Copied';
                 macText.style.filter = 'blur(0)';
                 macText.style.color = 'var(--accent)';
                 reveal.style.opacity = '0';
@@ -1677,11 +1694,12 @@
             });
         }
 
-        function copyText(el, text) {
+        function copyText(el, text, event) {
+            if (event) event.stopPropagation();
             const value = text || el.textContent;
             const original = el.textContent;
-            navigator.clipboard.writeText(value).then(() => {
-                el.textContent = 'Copied!';
+            copyToClipboard(value).then(() => {
+                el.textContent = 'Copied';
                 el.style.color = 'var(--accent)';
                 setTimeout(() => {
                     el.textContent = original;
