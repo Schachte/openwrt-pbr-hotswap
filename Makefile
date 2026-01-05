@@ -163,8 +163,8 @@ deploy: build-linux-arm64 generate-certs
 		ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "$(ROUTER_PATH)/$(BINARY_NAME) -listen :$(ROUTER_PORT) > $(ROUTER_PATH)/pbr-vpn.log 2>&1 &"; \
 	fi
 	@echo ""
-	@echo "Waiting for server to start (includes PBR reload)..."
-	@sleep 7
+	@echo "Waiting for server to start..."
+	@sleep 3
 	@$(MAKE) health --no-print-directory
 
 deploy-amd64: build-linux-amd64

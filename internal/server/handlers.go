@@ -36,17 +36,18 @@ type ErrorResponse struct {
 }
 
 type IndexData struct {
-	VPNInterface     string
-	DefaultInterface string
-	VPNInterfaces    []InterfaceInfo
-	ServiceRunning   bool
-	Devices          []device.Device
-	HiddenCount      int
-	VisibleCount     int
-	LastUpdated      string
-	Version          string
-	AccentColor      string
-	ClientIP         string
+	VPNInterface        string
+	VPNInterfaceDisplay string
+	DefaultInterface    string
+	VPNInterfaces       []InterfaceInfo
+	ServiceRunning      bool
+	Devices             []device.Device
+	HiddenCount         int
+	VisibleCount        int
+	LastUpdated         string
+	Version             string
+	AccentColor         string
+	ClientIP            string
 }
 
 type InterfaceInfo struct {
@@ -97,18 +98,30 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	interfaces := s.buildInterfaceList()
 
+	activeInterface := s.config.GetActiveInterface()
+	activeDisplayName := activeInterface
+	for _, iface := range interfaces {
+		if iface.Active {
+			if iface.DisplayName != "" {
+				activeDisplayName = iface.DisplayName
+			}
+			break
+		}
+	}
+
 	data := IndexData{
-		VPNInterface:     s.config.GetActiveInterface(),
-		DefaultInterface: s.config.GetDefaultInterface(),
-		VPNInterfaces:    interfaces,
-		ServiceRunning:   true,
-		Devices:          devices,
-		HiddenCount:      hiddenCount,
-		VisibleCount:     visibleCount,
-		LastUpdated:      time.Now().Format("2006-01-02 15:04:05"),
-		Version:          s.version,
-		AccentColor:      s.config.GetAccentColor(),
-		ClientIP:         getClientIP(r),
+		VPNInterface:        activeInterface,
+		VPNInterfaceDisplay: activeDisplayName,
+		DefaultInterface:    s.config.GetDefaultInterface(),
+		VPNInterfaces:       interfaces,
+		ServiceRunning:      true,
+		Devices:             devices,
+		HiddenCount:         hiddenCount,
+		VisibleCount:        visibleCount,
+		LastUpdated:         time.Now().Format("2006-01-02 15:04:05"),
+		Version:             s.version,
+		AccentColor:         s.config.GetAccentColor(),
+		ClientIP:            getClientIP(r),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -371,12 +384,28 @@ func (s *Server) enrichDevices(devices []device.Device) []device.Device {
 		return devices
 	}
 
+	ifaceDisplayNames := make(map[string]string)
+	for _, iface := range s.config.GetVPNInterfaces() {
+		if iface.DisplayName != "" {
+			ifaceDisplayNames[iface.Name] = iface.DisplayName
+		} else {
+			ifaceDisplayNames[iface.Name] = iface.Name
+		}
+	}
+
 	var favorites, others []device.Device
 	for i := range devices {
 		if p, ok := prefs[devices[i].MAC]; ok {
 			devices[i].CustomName = p.CustomName
 			devices[i].Favorite = p.Favorite
 			devices[i].Hidden = p.Hidden
+		}
+		if devices[i].VPNInterface != "" {
+			if displayName, ok := ifaceDisplayNames[devices[i].VPNInterface]; ok {
+				devices[i].VPNInterfaceDisplay = displayName
+			} else {
+				devices[i].VPNInterfaceDisplay = devices[i].VPNInterface
+			}
 		}
 		if devices[i].Favorite {
 			favorites = append(favorites, devices[i])

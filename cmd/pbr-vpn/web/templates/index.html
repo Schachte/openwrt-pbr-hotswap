@@ -135,6 +135,12 @@
             position: relative;
         }
 
+        .ip-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
         .public-ip.loading {
             pointer-events: none;
         }
@@ -168,26 +174,19 @@
             font-size: 0.8rem;
         }
 
-        .public-ip .refresh-ip {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .public-ip .refresh-ip:hover {
-            color: #5c9eff;
-        }
-
         .public-ip .ip-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             cursor: help;
             position: relative;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.15s;
+        }
+
+        .public-ip .ip-info:hover {
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
         .ip-tooltip {
@@ -350,7 +349,7 @@
         }
 
         .device-card:hover {
-            border-color: var(--border);
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .device-card.loading {
@@ -617,11 +616,44 @@
             font-size: 0.875rem;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
 
         .swap-btn:hover {
             background: var(--accent-20);
             border-color: var(--accent);
+        }
+
+        .swap-btn .swap-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            white-space: nowrap;
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 50;
+        }
+
+        .swap-btn .swap-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--border-subtle);
+        }
+
+        .swap-btn:hover .swap-tooltip {
+            display: block;
         }
 
         .toggle {
@@ -794,13 +826,23 @@
 
             .header-info {
                 width: 100%;
-                flex-wrap: wrap;
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.5rem;
+            }
+
+            .interface-label {
+                width: 100%;
             }
 
             .interface-select {
                 min-height: 44px;
                 font-size: 1rem;
+                flex: 1;
+            }
+
+            .status-badge {
+                display: none;
             }
 
             .container {
@@ -821,14 +863,31 @@
 
             .public-ip {
                 width: 100%;
-                justify-content: space-between;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .ip-label {
+                width: 100%;
+                margin-bottom: 0.25rem;
+                font-size: 0.7rem;
+            }
+
+            .public-ip .ip-info {
+                padding: 0.375rem;
+            }
+
+            .public-ip .ip-address {
+                font-size: 0.9rem;
             }
 
             .refresh-btn {
                 width: 100%;
-                min-height: 44px;
-                padding: 0.5rem 0.75rem;
+                min-height: 36px;
+                padding: 0.375rem 0.75rem;
                 justify-content: center;
+                font-size: 0.8rem;
             }
 
             .device-card {
@@ -878,6 +937,10 @@
                 padding: 0.5rem 0.75rem;
             }
 
+            .swap-btn .swap-tooltip {
+                display: none !important;
+            }
+
             .dropdown-menu {
                 min-width: 160px;
             }
@@ -885,6 +948,12 @@
             .dropdown-item {
                 padding: 0.875rem 1rem;
                 min-height: 44px;
+            }
+
+            .ip-tooltip {
+                left: 0;
+                right: auto;
+                min-width: 200px;
             }
 
             .modal-content {
@@ -951,7 +1020,7 @@
                     </select>
                 </label>
                 {{else}}
-                <span class="interface-badge">{{.VPNInterface}}</span>
+                <span class="interface-badge">{{.VPNInterfaceDisplay}}</span>
                 {{end}}
                 <span class="status-badge status-ok">
                     <span class="status-dot"></span>
@@ -965,10 +1034,11 @@
         <div class="toolbar">
             <h2>Network Devices</h2>
             <div class="toolbar-right">
-                <div class="public-ip loading" id="publicIp">
+                <div class="public-ip" id="publicIp">
+                    <span class="ip-label">Current Device IPv4:</span>
                     <div class="ip-info" onclick="toggleIpTooltip(event)">
                         <span class="flag" id="ipFlag">🌐</span>
-                        <span class="ip-address" id="ipAddress">Loading...</span>
+                        <span class="ip-address" id="ipAddress">—</span>
                         <span class="country" id="ipCountry"></span>
                         <span class="info-icon">ⓘ</span>
                         <div class="ip-tooltip" id="ipTooltip">
@@ -986,9 +1056,8 @@
                             </div>
                         </div>
                     </div>
-                    <button class="refresh-ip" onclick="fetchPublicIP()" title="Refresh IP">↻</button>
                 </div>
-                <button class="refresh-btn" onclick="location.reload()">
+                <button class="refresh-btn" onclick="location.reload()" title="Refresh">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                         <path d="M3 3v5h5"/>
@@ -1025,9 +1094,10 @@
                     </div>
                     <div class="device-actions">
                         <div class="toggle-wrapper">
-                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{else}}{{$.DefaultInterface}}{{end}}</span>
+                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
                             {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
-                            <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)" title="Switch to {{$.VPNInterface}}">
+                            <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)">
+                                <span class="swap-tooltip">Swap traffic to {{$.VPNInterfaceDisplay}}</span>
                                 ⇄
                             </button>
                             {{end}}
@@ -1083,9 +1153,10 @@
                         </div>
                         <div class="device-actions">
                             <div class="toggle-wrapper">
-                                <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterface}}{{else}}{{$.DefaultInterface}}{{end}}</span>
+                                <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
                                 {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
-                                <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)" title="Switch to {{$.VPNInterface}}">
+                                <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)">
+                                    <span class="swap-tooltip">Swap traffic to {{$.VPNInterfaceDisplay}}</span>
                                     ⇄
                                 </button>
                                 {{end}}
@@ -1133,6 +1204,11 @@
         const activeInterface = '{{.VPNInterface}}';
         const defaultInterface = '{{.DefaultInterface}}';
         const clientIP = '{{.ClientIP}}';
+        const interfaceDisplayNames = { {{range $i, $iface := .VPNInterfaces}}{{if $i}}, {{end}}'{{$iface.Name}}': '{{if $iface.DisplayName}}{{$iface.DisplayName}}{{else}}{{$iface.Name}}{{end}}'{{end}} };
+
+        function getInterfaceDisplayName(name) {
+            return interfaceDisplayNames[name] || name;
+        }
 
         // Country code to flag emoji
         function countryToFlag(countryCode) {
@@ -1159,8 +1235,9 @@
 
         // Cache for IP data (cleared on VPN toggle)
         let cachedIPData = null;
+        let ipFetchInProgress = false;
 
-        // Fetch from multiple endpoints in parallel, return first success
+        // Fetch from endpoints sequentially, return first success
         async function fetchIPFromEndpoints() {
             const endpoints = [
                 {
@@ -1187,23 +1264,24 @@
             ];
 
             const timeout = 4000;
-            const promises = endpoints.map(async (endpoint) => {
+            // Try endpoints one at a time
+            for (const endpoint of endpoints) {
                 try {
                     const resp = await fetchWithTimeout(endpoint.url, { cache: 'no-store' }, timeout);
                     const text = await resp.text();
                     const result = endpoint.parse(text);
-                    if (!result.ip) throw new Error('No IP');
-                    return result;
+                    if (result.ip) return result;
                 } catch (err) {
-                    throw err;
+                    // Try next endpoint
                 }
-            });
-
-            // Return first successful result
-            return Promise.any(promises);
+            }
+            throw new Error('All endpoints failed');
         }
 
         async function fetchPublicIP(expectDifferentFrom = null, maxRetries = 5) {
+            // Only allow one fetch at a time
+            if (ipFetchInProgress) return null;
+
             const container = document.getElementById('publicIp');
             const ipEl = document.getElementById('ipAddress');
             const flagEl = document.getElementById('ipFlag');
@@ -1220,6 +1298,7 @@
                 return cachedIPData.ip;
             }
 
+            ipFetchInProgress = true;
             container.classList.add('loading');
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -1247,6 +1326,7 @@
                         document.getElementById('tipCountry').textContent = country_code || '-';
                         document.getElementById('tipColo').textContent = colo || '-';
                         container.classList.remove('loading');
+                        ipFetchInProgress = false;
                         return ip;
                     } else {
                         throw new Error('No IP returned');
@@ -1262,11 +1342,30 @@
                     await new Promise(r => setTimeout(r, 300));
                 }
             }
+            ipFetchInProgress = false;
             return null;
         }
 
-        // Fetch IP on page load
-        fetchPublicIP();
+        // Fetch IP on page load (skip if coming from dropdown change)
+        if (sessionStorage.getItem('skipIpFetch')) {
+            sessionStorage.removeItem('skipIpFetch');
+            // Restore cached IP data
+            const savedIP = sessionStorage.getItem('cachedIP');
+            if (savedIP) {
+                try {
+                    cachedIPData = JSON.parse(savedIP);
+                    document.getElementById('ipAddress').textContent = cachedIPData.ip;
+                    document.getElementById('ipFlag').textContent = cachedIPData.country_code ? countryToFlag(cachedIPData.country_code) : '🌐';
+                    document.getElementById('ipCountry').textContent = cachedIPData.country_code || '';
+                    document.getElementById('tipIp').textContent = cachedIPData.ip;
+                    document.getElementById('tipCountry').textContent = cachedIPData.country_code || '-';
+                    document.getElementById('tipColo').textContent = cachedIPData.colo || '-';
+                } catch (e) {}
+                sessionStorage.removeItem('cachedIP');
+            }
+        } else {
+            fetchPublicIP();
+        }
 
         async function toggleVPN(ip, checkbox) {
             const card = checkbox.closest('.device-card');
@@ -1294,7 +1393,7 @@
                     if (data.vpn_enabled) {
                         label.classList.add('active');
                         if (data.device && data.device.vpn_interface) {
-                            label.textContent = data.device.vpn_interface;
+                            label.textContent = getInterfaceDisplayName(data.device.vpn_interface);
                         }
                         // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
@@ -1343,7 +1442,7 @@
                     alert('Error: ' + data.error);
                 } else {
                     if (data.device && data.device.vpn_interface) {
-                        label.textContent = data.device.vpn_interface;
+                        label.textContent = getInterfaceDisplayName(data.device.vpn_interface);
                     }
                     btn.remove();
                     // Clear cache and refetch IP if swapping current device
@@ -1436,10 +1535,14 @@
                 if (!data.success) {
                     alert('Error: ' + data.error);
                 }
+                // Reload to show swap icons, keep IP unchanged
+                sessionStorage.setItem('skipIpFetch', 'true');
+                if (cachedIPData) {
+                    sessionStorage.setItem('cachedIP', JSON.stringify(cachedIPData));
+                }
                 location.reload();
             } catch (err) {
                 alert('Network error: ' + err.message);
-                location.reload();
             }
         }
 

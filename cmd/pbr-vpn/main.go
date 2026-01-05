@@ -86,12 +86,14 @@ func main() {
 
 	pbrManager := pbr.NewUCIManager(cfg.GetActiveInterface())
 
-	// Reload PBR on bootup to ensure routing rules are applied
-	if err := pbrManager.Reload(); err != nil {
-		log.Printf("Warning: failed to reload PBR on startup: %v", err)
-	} else {
-		log.Printf("PBR service reloaded on startup")
-	}
+	// Reload PBR in background to not block server startup
+	go func() {
+		if err := pbrManager.Reload(); err != nil {
+			log.Printf("Warning: failed to reload PBR on startup: %v", err)
+		} else {
+			log.Printf("PBR service reloaded on startup")
+		}
+	}()
 
 	dhcpDiscoverer := device.NewDHCPDiscoverer(cfg.DHCPLeasesPath, cfg.FriendlyNames)
 	staticDiscoverer := device.NewStaticDiscoverer(cfg.EthersPath, cfg.HostsPath, cfg.FriendlyNames)
