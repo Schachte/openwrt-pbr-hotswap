@@ -167,6 +167,7 @@
         .public-ip .ip-address {
             font-family: monospace;
             color: #5c9eff;
+            cursor: pointer;
         }
 
         .public-ip .country {
@@ -400,6 +401,7 @@
             font-weight: 600;
             font-family: monospace;
             color: var(--text-primary);
+            cursor: pointer;
         }
 
         .device-name {
@@ -423,8 +425,37 @@
         }
 
         .device-mac {
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .device-mac .mac-text {
             font-family: monospace;
             text-transform: uppercase;
+            filter: blur(4px);
+            transition: filter 0.2s;
+        }
+
+        .device-mac .mac-reveal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.6rem;
+            font-family: monospace;
+            color: var(--text-secondary);
+            opacity: 1;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .device-mac:hover .mac-text {
+            filter: blur(0);
+        }
+
+        .device-mac:hover .mac-reveal {
+            opacity: 0;
         }
 
         .source-badge {
@@ -1034,7 +1065,7 @@
                     <span class="ip-label">Current Device IPv4:</span>
                     <div class="ip-info" onclick="toggleIpTooltip(event)">
                         <span class="flag" id="ipFlag">🌐</span>
-                        <span class="ip-address" id="ipAddress">—</span>
+                        <span class="ip-address" id="ipAddress" onclick="copyText(this)" title="Click to copy">—</span>
                         <span class="country" id="ipCountry"></span>
                         <span class="info-icon">ⓘ</span>
                         <div class="ip-tooltip" id="ipTooltip">
@@ -1080,11 +1111,11 @@
                     </button>
                     <div class="device-info">
                         <div class="device-primary">
-                            <span class="device-ip">{{.IP}}</span>
+                            <span class="device-ip" onclick="copyText(this, '{{.IP}}')" title="Click to copy">{{.IP}}</span>
                             <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
                         </div>
                         <div class="device-meta">
-                            <span class="device-mac">{{.MAC}}</span>
+                            <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}')"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
                             <span class="source-badge source-{{.Source}}">{{.Source}}</span>
                         </div>
                     </div>
@@ -1139,11 +1170,11 @@
                         </button>
                         <div class="device-info">
                             <div class="device-primary">
-                                <span class="device-ip">{{.IP}}</span>
+                                <span class="device-ip" onclick="copyText(this, '{{.IP}}')" title="Click to copy">{{.IP}}</span>
                                 <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
                             </div>
                             <div class="device-meta">
-                                <span class="device-mac">{{.MAC}}</span>
+                                <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}')"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
                                 <span class="source-badge source-{{.Source}}">{{.Source}}</span>
                             </div>
                         </div>
@@ -1623,6 +1654,41 @@
         document.getElementById('renameInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveRename();
         });
+
+        function copyMAC(el, mac) {
+            navigator.clipboard.writeText(mac).then(() => {
+                const macText = el.querySelector('.mac-text');
+                const reveal = el.querySelector('.mac-reveal');
+                const width = el.offsetWidth;
+                el.style.minWidth = width + 'px';
+                el.style.textAlign = 'center';
+                macText.textContent = 'MAC Copied';
+                macText.style.filter = 'blur(0)';
+                macText.style.color = 'var(--accent)';
+                reveal.style.opacity = '0';
+                setTimeout(() => {
+                    macText.textContent = mac;
+                    macText.style.filter = '';
+                    macText.style.color = '';
+                    reveal.style.opacity = '';
+                    el.style.minWidth = '';
+                    el.style.textAlign = '';
+                }, 1000);
+            });
+        }
+
+        function copyText(el, text) {
+            const value = text || el.textContent;
+            const original = el.textContent;
+            navigator.clipboard.writeText(value).then(() => {
+                el.textContent = 'Copied!';
+                el.style.color = 'var(--accent)';
+                setTimeout(() => {
+                    el.textContent = original;
+                    el.style.color = '';
+                }, 1000);
+            });
+        }
 
         async function restartServer() {
             if (!confirm('Restart the PBR VPN server?')) return;
