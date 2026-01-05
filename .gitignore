@@ -52,3 +52,6 @@ tmp/
 
 # Config files that might contain secrets (adjust as needed)
 # config.json
+
+# TLS certificates (generated locally, contain private keys)
+tls/*.pem

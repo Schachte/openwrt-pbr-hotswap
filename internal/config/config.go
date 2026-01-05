@@ -17,6 +17,11 @@ type Config struct {
 
 	ListenAddr string `json:"listen_addr"`
 
+	// TLS configuration
+	TLSEnabled  bool   `json:"tls_enabled"`
+	TLSCertPath string `json:"tls_cert_path"`
+	TLSKeyPath  string `json:"tls_key_path"`
+
 	VPNInterface string `json:"vpn_interface"`
 
 	VPNInterfaces    []VPNInterface `json:"vpn_interfaces"`
@@ -75,6 +80,9 @@ func (c *Config) GetVPNInterfaces() []VPNInterface {
 func DefaultConfig() *Config {
 	return &Config{
 		ListenAddr:     ":8080",
+		TLSEnabled:     true,
+		TLSCertPath:    "/etc/pbr-vpn/cert.pem",
+		TLSKeyPath:     "/etc/pbr-vpn/key.pem",
 		VPNInterface:   "vpn_amsterdam",
 		DHCPLeasesPath: "/tmp/dhcp.leases",
 		EthersPath:     "/etc/ethers",

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"embed"
 	"flag"
 	"fmt"
@@ -36,6 +37,9 @@ func main() {
 	ethersPath := flag.String("ethers", "/etc/ethers", "Path to /etc/ethers file")
 	hostsPath := flag.String("hosts", "/etc/hosts", "Path to /etc/hosts file")
 	configPath := flag.String("config", "", "Path to JSON config file (optional, overrides other flags)")
+	tlsEnabled := flag.Bool("tls", true, "Enable TLS/HTTPS (default: true)")
+	tlsCert := flag.String("tls-cert", "/etc/pbr-vpn/cert.pem", "Path to TLS certificate file")
+	tlsKey := flag.String("tls-key", "/etc/pbr-vpn/key.pem", "Path to TLS private key file")
 	showVersion := flag.Bool("version", false, "Show version and exit")
 	flag.Parse()
 
@@ -51,6 +55,9 @@ func main() {
 	cfg.DHCPLeasesPath = *dhcpPath
 	cfg.EthersPath = *ethersPath
 	cfg.HostsPath = *hostsPath
+	cfg.TLSEnabled = *tlsEnabled
+	cfg.TLSCertPath = *tlsCert
+	cfg.TLSKeyPath = *tlsKey
 
 	if *configPath != "" {
 		if err := cfg.LoadFromFile(*configPath); err != nil {
@@ -64,7 +71,12 @@ func main() {
 	log.Printf("DHCP Leases: %s", cfg.DHCPLeasesPath)
 	log.Printf("Ethers File: %s", cfg.EthersPath)
 	log.Printf("Database: %s", cfg.DatabasePath)
-	log.Printf("Starting server on %s", cfg.ListenAddr)
+	if cfg.TLSEnabled {
+		log.Printf("TLS: enabled (cert: %s, key: %s)", cfg.TLSCertPath, cfg.TLSKeyPath)
+		log.Printf("Starting HTTPS server on %s", cfg.ListenAddr)
+	} else {
+		log.Printf("Starting HTTP server on %s", cfg.ListenAddr)
+	}
 
 	st, err := store.New(cfg.DatabasePath)
 	if err != nil {
@@ -88,7 +100,27 @@ func main() {
 		os.Exit(0)
 	}()
 
-	if err := http.ListenAndServe(cfg.ListenAddr, srv); err != nil {
-		log.Fatalf("Server error: %v", err)
+	if cfg.TLSEnabled {
+		if cfg.TLSCertPath == "" || cfg.TLSKeyPath == "" {
+			log.Fatalf("TLS enabled but certificate or key path not specified")
+		}
+
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+
+		httpServer := &http.Server{
+			Addr:      cfg.ListenAddr,
+			Handler:   srv,
+			TLSConfig: tlsConfig,
+		}
+
+		if err := httpServer.ListenAndServeTLS(cfg.TLSCertPath, cfg.TLSKeyPath); err != nil {
+			log.Fatalf("HTTPS server error: %v", err)
+		}
+	} else {
+		if err := http.ListenAndServe(cfg.ListenAddr, srv); err != nil {
+			log.Fatalf("HTTP server error: %v", err)
+		}
 	}
 }

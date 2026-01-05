@@ -30,8 +30,14 @@ SSH_OPTS=
 SCP_OPTS=-O
 endif
 
+TLS_DIR=tls
+TLS_CERT=$(TLS_DIR)/cert.pem
+TLS_KEY=$(TLS_DIR)/key.pem
+ROUTER_TLS_PATH=/etc/pbr-vpn
+
 .PHONY: all build build-linux-arm64 build-linux-amd64 build-all clean test deps \
-        deploy deploy-amd64 health logs logs-f stop install-service help run
+        deploy deploy-amd64 health logs logs-f stop install-service help run \
+        generate-certs
 
 all: build
 
@@ -50,8 +56,11 @@ help:
 	@echo "  make deps               - Download dependencies"
 	@echo "  make clean              - Remove build artifacts"
 	@echo ""
+	@echo "TLS:"
+	@echo "  make generate-certs     - Generate self-signed TLS certificates"
+	@echo ""
 	@echo "Deployment:"
-	@echo "  make deploy             - Build ARM64 and deploy to router"
+	@echo "  make deploy             - Build ARM64 and deploy to router (includes TLS certs)"
 	@echo "  make deploy-amd64       - Build AMD64 and deploy to router"
 	@echo "  make health             - Check if server is running on router"
 	@echo "  make logs               - View logs from router"
@@ -108,17 +117,37 @@ clean:
 	$(GOCLEAN)
 	rm -rf $(BUILD_DIR)
 
-deploy: build-linux-arm64
+generate-certs:
+	@mkdir -p $(TLS_DIR)
+	@if [ ! -f $(TLS_CERT) ] || [ ! -f $(TLS_KEY) ]; then \
+		echo "Generating self-signed TLS certificate..."; \
+		openssl req -x509 -newkey rsa:2048 \
+			-keyout $(TLS_KEY) \
+			-out $(TLS_CERT) \
+			-days 365 -nodes \
+			-subj "/CN=pbr-vpn" \
+			-addext "subjectAltName=IP:$(ROUTER_HOST),IP:127.0.0.1"; \
+		echo "Generated: $(TLS_CERT) and $(TLS_KEY)"; \
+	else \
+		echo "TLS certificates already exist in $(TLS_DIR)/"; \
+	fi
+
+deploy: build-linux-arm64 generate-certs
 	@echo "Deploying to $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)..."
 	@echo ""
-	@# Create directory if not exists
-	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "mkdir -p $(ROUTER_PATH)"
+	@# Create directories
+	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "mkdir -p $(ROUTER_PATH) $(ROUTER_TLS_PATH)"
 	@# Stop existing service if running
 	@echo "Stopping existing service (if running)..."
 	-ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "killall $(BINARY_NAME) 2>/dev/null" || true
 	@# Copy binary
 	@echo "Copying binary..."
 	scp $(SCP_OPTS) $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_PATH)/$(BINARY_NAME)
+	@# Copy TLS certificates
+	@echo "Copying TLS certificates..."
+	scp $(SCP_OPTS) $(TLS_CERT) $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_TLS_PATH)/cert.pem
+	scp $(SCP_OPTS) $(TLS_KEY) $(ROUTER_USER)@$(ROUTER_HOST):$(ROUTER_TLS_PATH)/key.pem
+	ssh $(SSH_OPTS) $(ROUTER_USER)@$(ROUTER_HOST) "chmod 600 $(ROUTER_TLS_PATH)/key.pem"
 	@# Copy config if exists
 	@if [ -f $(CONFIG_FILE) ]; then \
 		echo "Copying $(CONFIG_FILE)..."; \
@@ -150,8 +179,8 @@ deploy-amd64: build-linux-amd64
 	@$(MAKE) health --no-print-directory
 
 health:
-	@echo "Checking health at http://$(ROUTER_HOST):$(ROUTER_PORT)/health ..."
-	@curl -sf http://$(ROUTER_HOST):$(ROUTER_PORT)/health && echo "" && echo "Server is healthy!" || \
+	@echo "Checking health at https://$(ROUTER_HOST):$(ROUTER_PORT)/health ..."
+	@curl -sfk https://$(ROUTER_HOST):$(ROUTER_PORT)/health && echo "" && echo "Server is healthy!" || \
 		(echo "Health check failed! Server may not be running." && exit 1)
 
 logs:
