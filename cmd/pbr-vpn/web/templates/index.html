@@ -1157,22 +1157,75 @@
             }
         }
 
+        // Cache for IP data (cleared on VPN toggle)
+        let cachedIPData = null;
+
+        // Fetch from multiple endpoints in parallel, return first success
+        async function fetchIPFromEndpoints() {
+            const endpoints = [
+                {
+                    url: 'https://1.1.1.1/cdn-cgi/trace',
+                    parse: (text) => {
+                        const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
+                        return { ip: data.ip, country_code: data.loc, colo: data.colo };
+                    }
+                },
+                {
+                    url: 'https://cloudflare.com/cdn-cgi/trace',
+                    parse: (text) => {
+                        const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
+                        return { ip: data.ip, country_code: data.loc, colo: data.colo };
+                    }
+                },
+                {
+                    url: 'https://api.ipify.org?format=json',
+                    parse: (text) => {
+                        const data = JSON.parse(text);
+                        return { ip: data.ip, country_code: null, colo: null };
+                    }
+                }
+            ];
+
+            const timeout = 4000;
+            const promises = endpoints.map(async (endpoint) => {
+                try {
+                    const resp = await fetchWithTimeout(endpoint.url, { cache: 'no-store' }, timeout);
+                    const text = await resp.text();
+                    const result = endpoint.parse(text);
+                    if (!result.ip) throw new Error('No IP');
+                    return result;
+                } catch (err) {
+                    throw err;
+                }
+            });
+
+            // Return first successful result
+            return Promise.any(promises);
+        }
+
         async function fetchPublicIP(expectDifferentFrom = null, maxRetries = 3) {
             const container = document.getElementById('publicIp');
             const ipEl = document.getElementById('ipAddress');
             const flagEl = document.getElementById('ipFlag');
             const countryEl = document.getElementById('ipCountry');
 
+            // Use cache if available and not expecting different IP
+            if (cachedIPData && !expectDifferentFrom) {
+                ipEl.textContent = cachedIPData.ip;
+                flagEl.textContent = cachedIPData.country_code ? countryToFlag(cachedIPData.country_code) : '🌐';
+                countryEl.textContent = cachedIPData.country_code || '';
+                document.getElementById('tipIp').textContent = cachedIPData.ip;
+                document.getElementById('tipCountry').textContent = cachedIPData.country_code || '-';
+                document.getElementById('tipColo').textContent = cachedIPData.colo || '-';
+                return cachedIPData.ip;
+            }
+
             container.classList.add('loading');
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    const resp = await fetchWithTimeout('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' }, 10000);
-                    const text = await resp.text();
-                    const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
-                    const ip = data.ip;
-                    const country_code = data.loc;
-                    const colo = data.colo;
+                    const data = await fetchIPFromEndpoints();
+                    const { ip, country_code, colo } = data;
 
                     if (ip) {
                         // If we expect a different IP and got the same one, retry
@@ -1180,6 +1233,9 @@
                             await new Promise(r => setTimeout(r, 1000));
                             continue;
                         }
+
+                        // Cache the result
+                        cachedIPData = data;
 
                         ipEl.textContent = ip;
                         flagEl.textContent = country_code ? countryToFlag(country_code) : '🌐';
@@ -1201,8 +1257,8 @@
                         countryEl.textContent = '';
                         container.classList.remove('loading');
                     }
-                    // Wait 500ms before retry
-                    await new Promise(r => setTimeout(r, 500));
+                    // Wait 300ms before retry
+                    await new Promise(r => setTimeout(r, 300));
                 }
             }
             return null;
@@ -1239,15 +1295,17 @@
                         if (data.device && data.device.vpn_interface) {
                             label.textContent = data.device.vpn_interface;
                         }
-                        // Only refetch IP if toggling current device
+                        // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
+                            cachedIPData = null;
                             setTimeout(() => fetchPublicIP(initialIP, 3), 1000);
                         }
                     } else {
                         label.classList.remove('active');
                         label.textContent = defaultInterface;
-                        // Only refetch IP if toggling current device (faster for off)
+                        // Clear cache and refetch IP if toggling current device (faster for off)
                         if (isCurrentDevice) {
+                            cachedIPData = null;
                             setTimeout(() => fetchPublicIP(initialIP, 3), 250);
                         }
                     }
