@@ -11,7 +11,7 @@
 ---
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="Splitflow UI" width="800">
+  <img src="assets/screenshot2.png" alt="Splitflow UI" width="800">
 </p>
 
 ## Features
@@ -126,18 +126,18 @@ Create `config.json` for multiple VPN interfaces:
 
 ### Configuration Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `listen_addr` | `:8080` | Server listen address |
-| `tls_enabled` | `true` | Enable HTTPS with TLS |
-| `tls_cert_path` | `/etc/pbr-vpn/cert.pem` | Path to TLS certificate |
-| `tls_key_path` | `/etc/pbr-vpn/key.pem` | Path to TLS private key |
-| `vpn_interfaces` | - | List of VPN interfaces with display names |
-| `default_interface` | - | Default VPN interface |
-| `dhcp_leases_path` | `/tmp/dhcp.leases` | Path to DHCP leases file |
-| `ethers_path` | `/etc/ethers` | Path to ethers file |
-| `hosts_path` | `/etc/hosts` | Path to hosts file |
-| `friendly_names` | - | Custom device names by IP |
+| Option              | Default                 | Description                               |
+| ------------------- | ----------------------- | ----------------------------------------- |
+| `listen_addr`       | `:8080`                 | Server listen address                     |
+| `tls_enabled`       | `true`                  | Enable HTTPS with TLS                     |
+| `tls_cert_path`     | `/etc/pbr-vpn/cert.pem` | Path to TLS certificate                   |
+| `tls_key_path`      | `/etc/pbr-vpn/key.pem`  | Path to TLS private key                   |
+| `vpn_interfaces`    | -                       | List of VPN interfaces with display names |
+| `default_interface` | -                       | Default VPN interface                     |
+| `dhcp_leases_path`  | `/tmp/dhcp.leases`      | Path to DHCP leases file                  |
+| `ethers_path`       | `/etc/ethers`           | Path to ethers file                       |
+| `hosts_path`        | `/etc/hosts`            | Path to hosts file                        |
+| `friendly_names`    | -                       | Custom device names by IP                 |
 
 ## Troubleshooting
 
