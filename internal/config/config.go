@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"sync"
 )
 
 type VPNInterface struct {
@@ -11,6 +12,9 @@ type VPNInterface struct {
 }
 
 type Config struct {
+	mu         sync.RWMutex `json:"-"`
+	configPath string       `json:"-"`
+
 	ListenAddr string `json:"listen_addr"`
 
 	VPNInterface string `json:"vpn_interface"`
@@ -24,7 +28,16 @@ type Config struct {
 	HostsPath      string `json:"hosts_path"`
 	DatabasePath   string `json:"database_path"`
 
+	AccentColor string `json:"accent_color"`
+
 	FriendlyNames map[string]string `json:"friendly_names"`
+}
+
+func (c *Config) GetAccentColor() string {
+	if c.AccentColor != "" {
+		return c.AccentColor
+	}
+	return "#f59e0b"
 }
 
 func (c *Config) GetActiveInterface() string {
@@ -72,10 +85,50 @@ func DefaultConfig() *Config {
 }
 
 func (c *Config) LoadFromFile(path string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	return json.Unmarshal(data, c)
+	if err := json.Unmarshal(data, c); err != nil {
+		return err
+	}
+
+	c.configPath = path
+	return nil
+}
+
+func (c *Config) SaveToFile() error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.configPath == "" {
+		return nil
+	}
+
+	// Read existing config to preserve fields like VPNInterfaces
+	existing := make(map[string]interface{})
+	if data, err := os.ReadFile(c.configPath); err == nil {
+		json.Unmarshal(data, &existing)
+	}
+
+	// Only update runtime-modifiable fields, preserve the rest
+	existing["active_interface"] = c.ActiveInterface
+	existing["accent_color"] = c.AccentColor
+
+	data, err := json.MarshalIndent(existing, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(c.configPath, data, 0644)
+}
+
+func (c *Config) SetActiveInterface(name string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.ActiveInterface = name
 }

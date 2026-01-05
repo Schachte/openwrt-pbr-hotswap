@@ -11,6 +11,7 @@ type Manager interface {
 	AddPolicy(ip string, deviceName string) error
 	RemovePolicy(index int) error
 	TogglePolicy(ip string, deviceName string) (enabled bool, err error)
+	SwapInterface(ip string, deviceName string) error
 	Reload() error
 	SetInterface(name string)
 	GetInterface() string
@@ -105,6 +106,22 @@ func (m *UCIManager) RemovePolicy(index int) error {
 	return m.Reload()
 }
 
+func (m *UCIManager) RemovePolicyByName(name string) error {
+	// Find the policy index by iterating through policies
+	policies, err := m.ListPolicies()
+	if err != nil {
+		return fmt.Errorf("failed to list policies: %w", err)
+	}
+
+	for _, p := range policies {
+		if p.Name == name {
+			return m.RemovePolicy(p.Index)
+		}
+	}
+
+	return fmt.Errorf("policy with name '%s' not found", name)
+}
+
 func (m *UCIManager) TogglePolicy(ip string, deviceName string) (enabled bool, err error) {
 	policy, err := m.GetPolicyForIP(ip)
 	if err != nil {
@@ -119,23 +136,32 @@ func (m *UCIManager) TogglePolicy(ip string, deviceName string) (enabled bool, e
 		return true, nil
 	}
 
-	// Policy exists - check if it's for a different interface (swap case)
-	if policy.Interface != m.VPNInterface {
-		// Remove old policy and add new one for current interface
-		if err := m.RemovePolicy(policy.Index); err != nil {
-			return false, err
-		}
-		if err := m.AddPolicy(ip, deviceName); err != nil {
-			return false, err
-		}
-		return true, nil
-	}
-
-	// Same interface - toggle off
+	// Policy exists - remove it (toggle off)
+	// Use index directly since we just fetched fresh policy data
 	if err := m.RemovePolicy(policy.Index); err != nil {
 		return false, err
 	}
 	return false, nil
+}
+
+// SwapInterface removes existing policy and creates new one for current interface
+func (m *UCIManager) SwapInterface(ip string, deviceName string) error {
+	policy, err := m.GetPolicyForIP(ip)
+	if err != nil {
+		return err
+	}
+
+	if policy == nil {
+		return m.AddPolicy(ip, deviceName)
+	}
+
+	// Remove old policy
+	if err := m.RemovePolicy(policy.Index); err != nil {
+		return err
+	}
+
+	// Add new policy for current interface
+	return m.AddPolicy(ip, deviceName)
 }
 
 func (m *UCIManager) Reload() error {

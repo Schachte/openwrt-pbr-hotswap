@@ -60,6 +60,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/hidden", s.handleHidden)
 	s.mux.HandleFunc("/api/interfaces", s.handleListInterfaces)
 	s.mux.HandleFunc("/api/interface", s.handleSetInterface)
+	s.mux.HandleFunc("/api/restart", s.handleRestart)
+	s.mux.HandleFunc("/api/swap", s.handleSwapInterface)
+	s.mux.HandleFunc("/api/ip", s.handlePublicIP)
 }
 
 func (s *Server) handleFavicon(w http.ResponseWriter, r *http.Request) {

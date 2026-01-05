@@ -6,6 +6,14 @@
     <title>OpenWRT PBR VPN Control</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
+        :root {
+            --accent: {{.AccentColor}};
+            --accent-10: color-mix(in srgb, {{.AccentColor}} 10%, transparent);
+            --accent-20: color-mix(in srgb, {{.AccentColor}} 20%, transparent);
+            --accent-30: color-mix(in srgb, {{.AccentColor}} 30%, transparent);
+            --accent-40: color-mix(in srgb, {{.AccentColor}} 40%, transparent);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -14,15 +22,15 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
+            background: #121212;
+            color: #e5e5e5;
             min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            background: #1e1e1e;
             padding: 1.5rem;
-            border-bottom: 1px solid #0f3460;
+            border-bottom: 1px solid #2a2a2a;
         }
 
         .header-content {
@@ -38,18 +46,19 @@
         .header-title {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
-        .header-logo {
-            width: 36px;
-            height: 36px;
+        .header-emoji {
+            font-size: 1.5rem;
+            line-height: 1;
         }
 
         .header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.25rem;
+            font-weight: 500;
             color: #fff;
+            letter-spacing: -0.02em;
         }
 
         .header-info {
@@ -62,12 +71,12 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #888;
+            color: #737373;
             font-size: 0.875rem;
         }
 
         .interface-label span {
-            color: #888;
+            color: #737373;
         }
 
         .interface-label {
@@ -76,49 +85,64 @@
         }
 
         .interface-select {
-            background: rgba(0, 212, 170, 0.15);
-            color: #00d4aa;
+            background: var(--accent-10);
+            color: var(--accent);
             padding: 0.375rem 0.75rem;
-            border-radius: 6px;
             font-size: 0.875rem;
             font-family: monospace;
-            border: 1px solid rgba(0, 212, 170, 0.3);
+            border: 1px solid var(--accent-30);
+            border-radius: 4px;
             cursor: pointer;
         }
 
         .interface-select:focus {
             outline: none;
-            border-color: #00d4aa;
+            border-color: var(--accent);
         }
 
         .interface-select option {
-            background: #1a1a2e;
-            color: #eee;
+            background: #121212;
+            color: #e5e5e5;
             padding: 0.5rem;
         }
 
         .interface-badge {
-            background: rgba(0, 212, 170, 0.15);
-            color: #00d4aa;
+            background: var(--accent-10);
+            color: var(--accent);
             padding: 0.375rem 0.75rem;
-            border-radius: 6px;
             font-size: 0.875rem;
             font-family: monospace;
+            border-radius: 4px;
         }
 
         .public-ip {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(52, 152, 219, 0.15);
+            background: #1e1e1e;
             padding: 0.375rem 0.75rem;
-            border-radius: 6px;
             font-size: 0.875rem;
-            border: 1px solid rgba(52, 152, 219, 0.3);
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            position: relative;
         }
 
         .public-ip.loading {
-            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .public-ip.loading::before {
+            content: 'Refreshing IP...';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
 
         .public-ip .flag {
@@ -128,30 +152,26 @@
 
         .public-ip .ip-address {
             font-family: monospace;
-            color: #3498db;
+            color: #5c9eff;
         }
 
         .public-ip .country {
-            color: #888;
+            color: #737373;
             font-size: 0.8rem;
         }
 
         .public-ip .refresh-ip {
             background: none;
             border: none;
-            color: #666;
+            color: #525252;
             cursor: pointer;
             padding: 0;
             font-size: 0.9rem;
-            transition: transform 0.3s;
+            transition: color 0.2s;
         }
 
         .public-ip .refresh-ip:hover {
-            color: #3498db;
-        }
-
-        .public-ip.loading .refresh-ip {
-            animation: spin 1s linear infinite;
+            color: #5c9eff;
         }
 
         .public-ip .ip-info {
@@ -168,15 +188,15 @@
             top: 100%;
             left: 0;
             margin-top: 8px;
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
-            border-radius: 8px;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
             padding: 0.75rem 1rem;
-            min-width: 220px;
+            width: max-content;
             z-index: 50;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             font-size: 0.8rem;
             text-align: left;
+            white-space: nowrap;
         }
 
         .ip-tooltip::before {
@@ -186,18 +206,26 @@
             left: 20px;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-bottom: 6px solid #0f3460;
+            border-bottom: 6px solid #2a2a2a;
         }
 
-        .public-ip .ip-info:hover .ip-tooltip {
+        .info-icon {
+            color: #525252;
+            font-size: 0.9rem;
+            margin-left: 0.25rem;
+        }
+
+        .public-ip .ip-info:hover .ip-tooltip,
+        .public-ip .ip-info.active .ip-tooltip {
             display: block;
         }
 
         .ip-tooltip-row {
             display: flex;
             justify-content: space-between;
+            gap: 1.5rem;
             padding: 0.25rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid #2a2a2a;
         }
 
         .ip-tooltip-row:last-child {
@@ -205,11 +233,11 @@
         }
 
         .ip-tooltip-label {
-            color: #888;
+            color: #737373;
         }
 
         .ip-tooltip-value {
-            color: #eee;
+            color: #e5e5e5;
             font-family: monospace;
         }
 
@@ -218,14 +246,14 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.375rem 0.75rem;
-            border-radius: 6px;
             font-size: 0.875rem;
             font-weight: 500;
+            border-radius: 4px;
         }
 
         .status-ok {
-            background: rgba(39, 174, 96, 0.15);
-            color: #27ae60;
+            background: var(--accent-10);
+            color: var(--accent);
         }
 
         .status-dot {
@@ -257,7 +285,7 @@
         .toolbar h2 {
             font-size: 1.125rem;
             font-weight: 500;
-            color: #ccc;
+            color: #a3a3a3;
         }
 
         .toolbar-right {
@@ -267,11 +295,11 @@
         }
 
         .refresh-btn {
-            background: #0f3460;
-            color: #fff;
-            border: 1px solid #16213e;
+            background: #1e1e1e;
+            color: #e5e5e5;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
             padding: 0.5rem 1rem;
-            border-radius: 6px;
             cursor: pointer;
             font-size: 0.875rem;
             transition: all 0.2s;
@@ -281,8 +309,8 @@
         }
 
         .refresh-btn:hover {
-            background: #16213e;
-            border-color: #0f3460;
+            background: #252525;
+            border-color: #3a3a3a;
         }
 
         .refresh-btn svg {
@@ -297,46 +325,54 @@
         }
 
         .device-card {
-            background: #16213e;
-            border: 1px solid #0f3460;
+            position: relative;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
             padding: 1rem 1.25rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            transition: all 0.2s;
+            transition: border-color 0.2s;
         }
 
         .device-card.favorite {
-            border-color: #f39c12;
-            background: linear-gradient(135deg, #16213e 0%, #1a2a3e 100%);
+            border-color: var(--accent);
+            background: #1e1e1e;
         }
 
         .device-card:hover {
-            border-color: #1a3a5c;
-            transform: translateY(-1px);
+            border-color: #3a3a3a;
         }
 
         .device-card.loading {
-            opacity: 0.7;
             pointer-events: none;
         }
 
-        .device-card.loading .toggle-wrapper::after {
+        .device-card.loading::before {
             content: '';
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(0, 212, 170, 0.3);
-            border-top-color: #00d4aa;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-left: 8px;
+            position: absolute;
+            inset: 0;
+            background: rgba(18, 18, 18, 0.7);
+            z-index: 1;
         }
 
-        .device-card.loading .toggle {
-            opacity: 0.4;
+        .device-card.loading::after {
+            content: '';
+            position: absolute;
+            top: calc(50% - 12px);
+            left: calc(50% - 12px);
+            width: 24px;
+            height: 24px;
+            border: 2px solid #3a3a3a;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            z-index: 2;
         }
 
         @keyframes spin {
+            from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
@@ -360,13 +396,13 @@
         }
 
         .device-name {
-            color: #888;
+            color: #737373;
             font-size: 0.9rem;
             cursor: pointer;
         }
 
         .device-name:hover {
-            color: #aaa;
+            color: #a3a3a3;
             text-decoration: underline;
         }
 
@@ -376,7 +412,7 @@
             gap: 0.75rem;
             margin-top: 0.5rem;
             font-size: 0.8rem;
-            color: #666;
+            color: #525252;
         }
 
         .device-mac {
@@ -387,21 +423,21 @@
         .source-badge {
             display: inline-block;
             padding: 0.125rem 0.5rem;
-            border-radius: 4px;
             font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border-radius: 3px;
         }
 
         .source-dhcp {
-            background: rgba(52, 152, 219, 0.15);
-            color: #3498db;
+            background: rgba(92, 159, 255, 0.1);
+            color: #5c9eff;
         }
 
         .source-static {
-            background: rgba(155, 89, 182, 0.15);
-            color: #9b59b6;
+            background: rgba(167, 139, 250, 0.1);
+            color: #a78bfa;
         }
 
         .device-actions {
@@ -416,19 +452,19 @@
             cursor: pointer;
             font-size: 1.25rem;
             padding: 0.25rem;
-            transition: transform 0.2s;
+            transition: color 0.2s;
         }
 
         .favorite-btn:hover {
-            transform: scale(1.2);
+            color: var(--accent);
         }
 
         .favorite-btn.active {
-            color: #f39c12;
+            color: var(--accent);
         }
 
         .favorite-btn:not(.active) {
-            color: #555;
+            color: #525252;
         }
 
         .menu-container {
@@ -441,13 +477,13 @@
             cursor: pointer;
             font-size: 1.25rem;
             padding: 0.25rem 0.5rem;
-            color: #666;
+            color: #525252;
             transition: color 0.2s;
             line-height: 1;
         }
 
         .menu-btn:hover {
-            color: #aaa;
+            color: #a3a3a3;
         }
 
         .dropdown-menu {
@@ -455,12 +491,11 @@
             position: absolute;
             top: 100%;
             right: 0;
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
-            border-radius: 6px;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
             min-width: 140px;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .dropdown-menu.active {
@@ -473,7 +508,7 @@
             padding: 0.625rem 0.875rem;
             background: none;
             border: none;
-            color: #ccc;
+            color: #a3a3a3;
             font-size: 0.875rem;
             text-align: left;
             cursor: pointer;
@@ -481,20 +516,8 @@
         }
 
         .dropdown-item:hover {
-            background: #16213e;
+            background: #252525;
             color: #fff;
-        }
-
-        .dropdown-item:first-child {
-            border-radius: 6px 6px 0 0;
-        }
-
-        .dropdown-item:last-child {
-            border-radius: 0 0 6px 6px;
-        }
-
-        .dropdown-item:only-child {
-            border-radius: 6px;
         }
 
         .collapsible-section {
@@ -506,35 +529,35 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1rem;
-            background: #0f3460;
-            border: 1px solid #16213e;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .collapsible-header:hover {
-            background: #16213e;
+            background: #252525;
         }
 
         .collapsible-header h3 {
             font-size: 0.9rem;
             font-weight: 500;
-            color: #888;
+            color: #737373;
             flex: 1;
         }
 
         .hidden-count {
-            background: rgba(155, 89, 182, 0.2);
-            color: #9b59b6;
+            background: rgba(167, 139, 250, 0.1);
+            color: #a78bfa;
             padding: 0.125rem 0.5rem;
-            border-radius: 10px;
             font-size: 0.75rem;
             font-weight: 600;
+            border-radius: 3px;
         }
 
         .collapsible-arrow {
-            color: #666;
+            color: #525252;
             transition: transform 0.2s;
         }
 
@@ -568,20 +591,20 @@
         .toggle-label {
             font-size: 0.875rem;
             font-weight: 500;
-            color: #888;
+            color: #737373;
             min-width: 35px;
             text-align: right;
         }
 
         .toggle-label.active {
-            color: #00d4aa;
+            color: var(--accent);
         }
 
         .swap-btn {
-            background: rgba(243, 156, 18, 0.2);
-            border: 1px solid rgba(243, 156, 18, 0.4);
-            color: #f39c12;
+            background: var(--accent-10);
+            border: 1px solid var(--accent-40);
             border-radius: 4px;
+            color: var(--accent);
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
             cursor: pointer;
@@ -589,14 +612,14 @@
         }
 
         .swap-btn:hover {
-            background: rgba(243, 156, 18, 0.3);
-            border-color: #f39c12;
+            background: var(--accent-20);
+            border-color: var(--accent);
         }
 
         .toggle {
             position: relative;
-            width: 52px;
-            height: 28px;
+            width: 44px;
+            height: 24px;
         }
 
         .toggle input {
@@ -609,60 +632,85 @@
             position: absolute;
             cursor: pointer;
             inset: 0;
-            background: #2d3748;
-            border-radius: 28px;
-            transition: all 0.3s ease;
+            background: #3a3a3a;
+            border-radius: 12px;
+            transition: background 0.2s;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 22px;
-            width: 22px;
+            height: 18px;
+            width: 18px;
             left: 3px;
             bottom: 3px;
-            background: #fff;
+            background: #737373;
             border-radius: 50%;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
         }
 
         input:checked + .slider {
-            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            background: var(--accent);
         }
 
         input:checked + .slider:before {
-            transform: translateX(24px);
+            transform: translateX(20px);
+            background: #fff;
         }
 
         input:focus + .slider {
-            box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.3);
+            outline: 2px solid var(--accent-30);
+            outline-offset: 1px;
         }
 
         .footer {
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
             padding: 1.5rem;
-            color: #555;
+            color: #525252;
             font-size: 0.8rem;
+        }
+
+        .restart-btn {
+            background: none;
+            border: 1px solid #3a3a3a;
+            color: #737373;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .restart-btn:hover {
+            color: #a3a3a3;
+            border-color: #525252;
+        }
+
+        .restart-btn:active {
+            background: #2a2a2a;
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem;
-            color: #666;
+            color: #525252;
         }
 
         .empty-state h3 {
             font-size: 1.125rem;
             margin-bottom: 0.5rem;
-            color: #888;
+            color: #737373;
         }
 
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -673,11 +721,11 @@
         }
 
         .modal-content {
-            background: #16213e;
+            background: #1e1e1e;
             padding: 1.5rem;
-            border-radius: 10px;
             min-width: 300px;
-            border: 1px solid #0f3460;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
         }
 
         .modal-content h3 {
@@ -688,17 +736,17 @@
         .modal-content input {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid #0f3460;
-            border-radius: 6px;
-            background: #1a1a2e;
-            color: #eee;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            background: #121212;
+            color: #e5e5e5;
             font-size: 1rem;
             margin-bottom: 1rem;
         }
 
         .modal-content input:focus {
             outline: none;
-            border-color: #00d4aa;
+            border-color: var(--accent);
         }
 
         .modal-buttons {
@@ -709,48 +757,179 @@
 
         .modal-btn {
             padding: 0.5rem 1rem;
-            border-radius: 6px;
             cursor: pointer;
             font-size: 0.875rem;
             border: none;
+            border-radius: 4px;
         }
 
         .modal-btn.primary {
-            background: #00d4aa;
+            background: var(--accent);
             color: #000;
         }
 
         .modal-btn.secondary {
-            background: #2d3748;
-            color: #eee;
+            background: #2a2a2a;
+            color: #e5e5e5;
         }
 
         @media (max-width: 600px) {
+            .header {
+                padding: 1rem;
+            }
+
             .header-content {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .header-info {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .interface-select {
+                min-height: 44px;
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .toolbar-right {
+                width: 100%;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .public-ip {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .refresh-btn {
+                width: 100%;
+                min-height: 44px;
+                padding: 0.5rem 0.75rem;
+                justify-content: center;
             }
 
             .device-card {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 1rem;
+                padding: 1rem;
+            }
+
+            .device-ip {
+                font-size: 1.25rem;
             }
 
             .device-actions {
                 width: 100%;
                 justify-content: space-between;
-                padding-top: 0.5rem;
-                border-top: 1px solid #0f3460;
+                padding-top: 0.75rem;
+                border-top: 1px solid #2a2a2a;
+            }
+
+            .toggle {
+                width: 52px;
+                height: 28px;
+            }
+
+            .slider:before {
+                height: 22px;
+                width: 22px;
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(24px);
+            }
+
+            .favorite-btn,
+            .menu-btn {
+                font-size: 1.5rem;
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .swap-btn {
+                min-height: 44px;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .dropdown-menu {
+                min-width: 160px;
+            }
+
+            .dropdown-item {
+                padding: 0.875rem 1rem;
+                min-height: 44px;
+            }
+
+            .modal-content {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+                max-width: 400px;
+            }
+
+            .modal-content input {
+                min-height: 44px;
+                font-size: 1rem;
+            }
+
+            .modal-btn {
+                min-height: 44px;
+                padding: 0.75rem 1.25rem;
+            }
+
+            .collapsible-header {
+                min-height: 48px;
+            }
+
+            .ip-tooltip {
+                left: auto;
+                right: 0;
+                max-width: calc(100vw - 2rem);
+            }
+
+            .ip-tooltip::before {
+                left: auto;
+                right: 20px;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+
+            .restart-btn {
+                min-height: 44px;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
             }
         }
+
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
             <div class="header-title">
-                <img src="/static/logo.png" alt="Logo" class="header-logo">
+                <span class="header-emoji">🔐</span>
                 <h1>PBR VPN Control</h1>
             </div>
             <div class="header-info">
@@ -779,34 +958,23 @@
             <h2>Network Devices</h2>
             <div class="toolbar-right">
                 <div class="public-ip loading" id="publicIp">
-                    <div class="ip-info">
+                    <div class="ip-info" onclick="toggleIpTooltip(event)">
                         <span class="flag" id="ipFlag">🌐</span>
                         <span class="ip-address" id="ipAddress">Loading...</span>
                         <span class="country" id="ipCountry"></span>
+                        <span class="info-icon">ⓘ</span>
                         <div class="ip-tooltip" id="ipTooltip">
                             <div class="ip-tooltip-row">
                                 <span class="ip-tooltip-label">IP</span>
                                 <span class="ip-tooltip-value" id="tipIp">-</span>
                             </div>
                             <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">City</span>
-                                <span class="ip-tooltip-value" id="tipCity">-</span>
-                            </div>
-                            <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Region</span>
-                                <span class="ip-tooltip-value" id="tipRegion">-</span>
-                            </div>
-                            <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Country</span>
-                                <span class="ip-tooltip-value" id="tipCountry">-</span>
+                                <span class="ip-tooltip-label">Location</span>
+                                <span class="ip-tooltip-value" id="tipLocation">-</span>
                             </div>
                             <div class="ip-tooltip-row">
                                 <span class="ip-tooltip-label">ISP</span>
                                 <span class="ip-tooltip-value" id="tipIsp">-</span>
-                            </div>
-                            <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Timezone</span>
-                                <span class="ip-tooltip-value" id="tipTimezone">-</span>
                             </div>
                         </div>
                     </div>
@@ -937,7 +1105,8 @@
     </div>
 
     <footer class="footer">
-        Last updated: {{.LastUpdated}} | v{{.Version}}
+        <span>Last updated: {{.LastUpdated}} | v{{.Version}}</span>
+        <button class="restart-btn" onclick="restartServer()">Restart Server</button>
     </footer>
 
     <div class="modal" id="renameModal">
@@ -956,6 +1125,7 @@
         let currentRenameElement = null;
         const activeInterface = '{{.VPNInterface}}';
         const defaultInterface = '{{.DefaultInterface}}';
+        const clientIP = '{{.ClientIP}}';
 
         // Country code to flag emoji
         function countryToFlag(countryCode) {
@@ -967,7 +1137,20 @@
             return String.fromCodePoint(...codePoints);
         }
 
-        async function fetchPublicIP() {
+        async function fetchWithTimeout(url, options = {}, timeout = 8000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const resp = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(id);
+                return resp;
+            } catch (err) {
+                clearTimeout(id);
+                throw err;
+            }
+        }
+
+        async function fetchPublicIP(expectDifferentFrom = null, maxRetries = 3) {
             const container = document.getElementById('publicIp');
             const ipEl = document.getElementById('ipAddress');
             const flagEl = document.getElementById('ipFlag');
@@ -975,48 +1158,45 @@
 
             container.classList.add('loading');
 
-            try {
-                // Use ip-api.com (free, no key required, returns full geo info)
-                const resp = await fetch('http://ip-api.com/json/?fields=query,country,countryCode,city,regionName,isp,timezone', { cache: 'no-store' });
-                const data = await resp.json();
-
-                if (data.query) {
-                    ipEl.textContent = data.query;
-                    flagEl.textContent = countryToFlag(data.countryCode);
-                    countryEl.textContent = data.country || '';
-
-                    // Update tooltip
-                    document.getElementById('tipIp').textContent = data.query;
-                    document.getElementById('tipCity').textContent = data.city || '-';
-                    document.getElementById('tipRegion').textContent = data.regionName || '-';
-                    document.getElementById('tipCountry').textContent = data.country || '-';
-                    document.getElementById('tipIsp').textContent = data.isp || '-';
-                    document.getElementById('tipTimezone').textContent = data.timezone || '-';
-                } else {
-                    throw new Error('No IP returned');
-                }
-            } catch (err) {
-                // Fallback to ipify (IP only, no country)
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    const resp = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+                    // Use ip-api.com (supports CORS over HTTP)
+                    const resp = await fetchWithTimeout('http://ip-api.com/json/?_=' + Date.now(), { cache: 'no-store' }, 3000);
                     const data = await resp.json();
-                    ipEl.textContent = data.ip;
-                    flagEl.textContent = '🌐';
-                    countryEl.textContent = '';
-                    document.getElementById('tipIp').textContent = data.ip;
-                    document.getElementById('tipCity').textContent = '-';
-                    document.getElementById('tipRegion').textContent = '-';
-                    document.getElementById('tipCountry').textContent = '-';
-                    document.getElementById('tipIsp').textContent = '-';
-                    document.getElementById('tipTimezone').textContent = '-';
-                } catch (e) {
-                    ipEl.textContent = 'Error';
-                    flagEl.textContent = '⚠️';
-                    countryEl.textContent = '';
+
+                    if (data.query) {
+                        // If we expect a different IP and got the same one, retry
+                        if (expectDifferentFrom && data.query === expectDifferentFrom && attempt < maxRetries) {
+                            await new Promise(r => setTimeout(r, 1000));
+                            continue;
+                        }
+
+                        ipEl.textContent = data.query;
+                        flagEl.textContent = countryToFlag(data.countryCode);
+                        countryEl.textContent = data.country || '';
+
+                        // Update tooltip
+                        document.getElementById('tipIp').textContent = data.query;
+                        const location = [data.city, data.country].filter(Boolean).join(', ') || '-';
+                        document.getElementById('tipLocation').textContent = location;
+                        document.getElementById('tipIsp').textContent = data.isp || '-';
+                        container.classList.remove('loading');
+                        return data.query;
+                    } else {
+                        throw new Error('No IP returned');
+                    }
+                } catch (err) {
+                    if (attempt === maxRetries) {
+                        ipEl.textContent = 'Error';
+                        flagEl.textContent = '⚠️';
+                        countryEl.textContent = '';
+                        container.classList.remove('loading');
+                    }
+                    // Wait 500ms before retry
+                    await new Promise(r => setTimeout(r, 500));
                 }
-            } finally {
-                container.classList.remove('loading');
             }
+            return null;
         }
 
         // Fetch IP on page load
@@ -1026,9 +1206,13 @@
             const card = checkbox.closest('.device-card');
             const label = card.querySelector('.toggle-label');
             const ipContainer = document.getElementById('publicIp');
+            const initialIP = document.getElementById('ipAddress').textContent;
+            const isCurrentDevice = ip === clientIP;
 
             card.classList.add('loading');
-            ipContainer.classList.add('loading');
+            if (isCurrentDevice) {
+                ipContainer.classList.add('loading');
+            }
 
             try {
                 const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
@@ -1046,14 +1230,18 @@
                         if (data.device && data.device.vpn_interface) {
                             label.textContent = data.device.vpn_interface;
                         }
+                        // Only refetch IP if toggling current device
+                        if (isCurrentDevice) {
+                            setTimeout(() => fetchPublicIP(initialIP, 3), 1000);
+                        }
                     } else {
                         label.classList.remove('active');
                         label.textContent = defaultInterface;
+                        // Only refetch IP if toggling current device (faster for off)
+                        if (isCurrentDevice) {
+                            setTimeout(() => fetchPublicIP(initialIP, 3), 250);
+                        }
                     }
-                    // Refetch public IP after VPN change (wait for routing to take effect)
-                    setTimeout(fetchPublicIP, 3000);
-                    // Refetch again after longer delay in case routing takes time
-                    setTimeout(fetchPublicIP, 6000);
                 }
             } catch (err) {
                 checkbox.checked = !checkbox.checked;
@@ -1068,12 +1256,16 @@
             const card = btn.closest('.device-card');
             const label = card.querySelector('.toggle-label');
             const ipContainer = document.getElementById('publicIp');
+            const initialIP = document.getElementById('ipAddress').textContent;
+            const isCurrentDevice = ip === clientIP;
 
             card.classList.add('loading');
-            ipContainer.classList.add('loading');
+            if (isCurrentDevice) {
+                ipContainer.classList.add('loading');
+            }
 
             try {
-                const resp = await fetch('/api/toggle?ip=' + encodeURIComponent(ip), {
+                const resp = await fetch('/api/swap?ip=' + encodeURIComponent(ip), {
                     method: 'POST'
                 });
                 const data = await resp.json();
@@ -1082,15 +1274,14 @@
                     ipContainer.classList.remove('loading');
                     alert('Error: ' + data.error);
                 } else {
-                    // Update label to new interface
                     if (data.device && data.device.vpn_interface) {
                         label.textContent = data.device.vpn_interface;
                     }
-                    // Remove swap button since now on active interface
                     btn.remove();
-                    // Refetch public IP after interface swap (wait for routing to take effect)
-                    setTimeout(fetchPublicIP, 3000);
-                    setTimeout(fetchPublicIP, 6000);
+                    // Only refetch IP if swapping current device
+                    if (isCurrentDevice) {
+                        setTimeout(() => fetchPublicIP(initialIP, 3), 1000);
+                    }
                 }
             } catch (err) {
                 ipContainer.classList.remove('loading');
@@ -1222,11 +1413,22 @@
             content.classList.toggle('expanded');
         }
 
-        // Close dropdown menus when clicking outside
+        function toggleIpTooltip(event) {
+            event.stopPropagation();
+            const ipInfo = event.currentTarget;
+            ipInfo.classList.toggle('active');
+        }
+
+        // Close dropdown menus and tooltip when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menu-container')) {
                 document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
                     menu.classList.remove('active');
+                });
+            }
+            if (!e.target.closest('.ip-info')) {
+                document.querySelectorAll('.ip-info.active').forEach(info => {
+                    info.classList.remove('active');
                 });
             }
         });
@@ -1237,6 +1439,9 @@
                 closeRenameModal();
                 document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
                     menu.classList.remove('active');
+                });
+                document.querySelectorAll('.ip-info.active').forEach(info => {
+                    info.classList.remove('active');
                 });
             }
         });
@@ -1250,6 +1455,25 @@
         document.getElementById('renameInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveRename();
         });
+
+        async function restartServer() {
+            if (!confirm('Restart the PBR VPN server?')) return;
+
+            try {
+                const resp = await fetch('/api/restart', { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.success) {
+                    alert('Server is restarting...');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Server is restarting...');
+                setTimeout(() => location.reload(), 2000);
+            }
+        }
     </script>
 </body>
 </html>

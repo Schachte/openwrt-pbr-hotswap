@@ -11,7 +11,7 @@
 ---
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="PBR VPN Control UI" width="400">
+  <img src="assets/screenshot.png" alt="PBR VPN Control UI" width="800">
 </p>
 
 ## Features
@@ -49,6 +49,7 @@ Create `config.json` for multiple VPN interfaces:
     {"name": "vpn_london", "display_name": "London"}
   ],
   "default_interface": "vpn_amsterdam",
+  "accent_color": "#10b981",
   "dhcp_leases_path": "/tmp/dhcp.leases",
   "ethers_path": "/etc/ethers",
   "hosts_path": "/etc/hosts",
@@ -57,6 +58,19 @@ Create `config.json` for multiple VPN interfaces:
   }
 }
 ```
+
+### Configuration Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `listen_addr` | `:8080` | Server listen address |
+| `vpn_interfaces` | - | List of VPN interfaces with display names |
+| `default_interface` | - | Default VPN interface |
+| `accent_color` | `#10b981` | UI accent color (hex format) |
+| `dhcp_leases_path` | `/tmp/dhcp.leases` | Path to DHCP leases file |
+| `ethers_path` | `/etc/ethers` | Path to ethers file |
+| `hosts_path` | `/etc/hosts` | Path to hosts file |
+| `friendly_names` | - | Custom device names by IP |
 
 ## Troubleshooting
 

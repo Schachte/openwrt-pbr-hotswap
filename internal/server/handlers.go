@@ -2,8 +2,13 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"log"
+	"net"
 	"net/http"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/schachte/pbr-vpn/internal/device"
@@ -41,6 +46,8 @@ type IndexData struct {
 	VisibleCount     int
 	LastUpdated      string
 	Version          string
+	AccentColor      string
+	ClientIP         string
 }
 
 type InterfaceInfo struct {
@@ -101,6 +108,8 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		VisibleCount:     visibleCount,
 		LastUpdated:      time.Now().Format("2006-01-02 15:04:05"),
 		Version:          s.version,
+		AccentColor:      s.config.GetAccentColor(),
+		ClientIP:         getClientIP(r),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -223,6 +232,26 @@ func isValidIP(ip string) bool {
 	return parts == 3
 }
 
+func getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header first (for proxies)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		parts := strings.Split(xff, ",")
+		return strings.TrimSpace(parts[0])
+	}
+
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+
+	// Fall back to RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
 func (s *Server) handleFavorite(w http.ResponseWriter, r *http.Request) {
 	mac := r.URL.Query().Get("mac")
 	if mac == "" {
@@ -322,8 +351,12 @@ func (s *Server) handleSetInterface(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.config.ActiveInterface = name
+	s.config.SetActiveInterface(name)
 	s.pbrManager.SetInterface(name)
+
+	if err := s.config.SaveToFile(); err != nil {
+		log.Printf("Warning: failed to save config: %v", err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -367,4 +400,96 @@ func (s *Server) buildInterfaceList() []InterfaceInfo {
 		})
 	}
 	return interfaces
+}
+
+func (s *Server) handleRestart(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Server restarting...",
+	})
+
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		// Try OpenWRT init.d restart first
+		if _, err := os.Stat("/etc/init.d/pbr-vpn"); err == nil {
+			exec.Command("/etc/init.d/pbr-vpn", "restart").Start()
+		} else {
+			// Fallback: exit and let service manager restart
+			os.Exit(0)
+		}
+	}()
+}
+
+func (s *Server) handleSwapInterface(w http.ResponseWriter, r *http.Request) {
+	ip := r.URL.Query().Get("ip")
+	if ip == "" {
+		writeError(w, "IP address required", http.StatusBadRequest)
+		return
+	}
+
+	if !isValidIP(ip) {
+		writeError(w, "Invalid IP address format", http.StatusBadRequest)
+		return
+	}
+
+	devices, _ := s.discoverer.Discover()
+	var deviceName string
+	for _, d := range devices {
+		if d.IP == ip {
+			if d.FriendlyName != "" {
+				deviceName = d.FriendlyName
+			} else if d.Hostname != "" {
+				deviceName = d.Hostname
+			}
+			break
+		}
+	}
+
+	err := s.pbrManager.SwapInterface(ip, deviceName)
+	if err != nil {
+		log.Printf("Error swapping interface for %s: %v", ip, err)
+		writeError(w, "Failed to swap interface: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var updatedDevice device.Device
+	devices, _ = s.discoverer.Discover()
+	for _, d := range devices {
+		if d.IP == ip {
+			updatedDevice = d
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"device":  updatedDevice,
+		"message": "Interface swapped for " + ip,
+	})
+}
+
+func (s *Server) handlePublicIP(w http.ResponseWriter, r *http.Request) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get("https://ifconfig.co/json")
+	if err != nil {
+		writeError(w, "Failed to fetch public IP", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		writeError(w, "Failed to read response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
 }
