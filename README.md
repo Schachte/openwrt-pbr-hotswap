@@ -11,7 +11,7 @@
 ---
 
 <p align="center">
-  <img src="assets/screenshot2.png" alt="Splitflow UI" width="800">
+  <img src="assets/screenshot3.png" alt="Splitflow UI" width="800">
 </p>
 
 ## Features
