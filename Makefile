@@ -37,7 +37,7 @@ ROUTER_TLS_PATH=/etc/pbr-vpn
 
 .PHONY: all build build-linux-arm64 build-linux-amd64 build-all clean test deps \
         deploy deploy-amd64 health logs logs-f stop install-service help run \
-        generate-certs
+        generate-certs update-screenshot
 
 all: build
 
@@ -243,3 +243,11 @@ remove-comments: $(STRIP_TOOL)
 		$(STRIP_TOOL) "$$f"; \
 	done
 	@echo "Done!"
+
+update-screenshot:
+	@echo "Capturing screenshot..."
+	npx capture-website-cli https://$(ROUTER_HOST):$(ROUTER_PORT) --output=assets/screenshot.png --width=800 --height=600 --overwrite
+	git add assets/screenshot.png
+	git commit -m "Update screenshot"
+	git push
+	@echo "Screenshot updated and pushed!"
