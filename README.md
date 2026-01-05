@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="assets/logo.png" alt="PBR VPN Control" width="120">
+  <img src="assets/logo.png" alt="Splitflow" width="120">
 </p>
 
-<h1 align="center">PBR VPN Control</h1>
+<h1 align="center">Splitflow</h1>
 
 <p align="center">
-  Web UI for managing policy-based routing on OpenWRT routers
+  Per-device routing for OpenWRT
 </p>
 
 ---
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="PBR VPN Control UI" width="800">
+  <img src="assets/screenshot.png" alt="Splitflow UI" width="800">
 </p>
 
 ## Features
@@ -115,7 +115,6 @@ Create `config.json` for multiple VPN interfaces:
     {"name": "vpn_london", "display_name": "London"}
   ],
   "default_interface": "vpn_amsterdam",
-  "accent_color": "#10b981",
   "dhcp_leases_path": "/tmp/dhcp.leases",
   "ethers_path": "/etc/ethers",
   "hosts_path": "/etc/hosts",
@@ -135,7 +134,6 @@ Create `config.json` for multiple VPN interfaces:
 | `tls_key_path` | `/etc/pbr-vpn/key.pem` | Path to TLS private key |
 | `vpn_interfaces` | - | List of VPN interfaces with display names |
 | `default_interface` | - | Default VPN interface |
-| `accent_color` | `#10b981` | UI accent color (hex format) |
 | `dhcp_leases_path` | `/tmp/dhcp.leases` | Path to DHCP leases file |
 | `ethers_path` | `/etc/ethers` | Path to ethers file |
 | `hosts_path` | `/etc/hosts` | Path to hosts file |

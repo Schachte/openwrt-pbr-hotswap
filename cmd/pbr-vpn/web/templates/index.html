@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VPN Swapper</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f59e0b'/><path d='M50 20c-15 0-25 8-25 8v30c0 15 25 25 25 25s25-10 25-25V28s-10-8-25-8z' fill='white'/><circle cx='50' cy='50' r='10' fill='%23f59e0b'/></svg>">
+    <title>Splitflow</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f97316'/><path d='M50 20c-15 0-25 8-25 8v30c0 15 25 25 25 25s25-10 25-25V28s-10-8-25-8z' fill='white'/><circle cx='50' cy='50' r='10' fill='%23f97316'/></svg>">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
         :root {
-            --accent: {{.AccentColor}};
-            --accent-10: color-mix(in srgb, {{.AccentColor}} 10%, transparent);
-            --accent-20: color-mix(in srgb, {{.AccentColor}} 20%, transparent);
-            --accent-30: color-mix(in srgb, {{.AccentColor}} 30%, transparent);
-            --accent-40: color-mix(in srgb, {{.AccentColor}} 40%, transparent);
-            --bg-base: #1a1a1f;
-            --bg-card: #232329;
-            --bg-elevated: #2a2a31;
-            --border: #35353d;
-            --border-subtle: #2d2d35;
-            --text-primary: #e8e8ed;
-            --text-secondary: #9898a3;
-            --text-muted: #7a7a85;
+            --bg-base: #09090b;
+            --bg-card: #18181b;
+            --bg-elevated: #27272a;
+            --border: #27272a;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --text-dim: #52525b;
+            --text-darker: #3f3f46;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --accent-green: #22c55e;
+            --accent-star: #f59e0b;
         }
 
         * {
@@ -29,21 +32,46 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-base);
             color: var(--text-primary);
             min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(251, 146, 60, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.015;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: var(--bg-card);
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-subtle);
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 48px 48px 0 48px;
         }
 
         .header-content {
-            max-width: 900px;
-            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -54,58 +82,69 @@
         .header-title {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 12px;
         }
 
-        .header-emoji {
-            font-size: 1.5rem;
-            line-height: 1;
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
         }
 
-        .header h1 {
-            font-size: 1.25rem;
-            font-weight: 500;
+        .header-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: url(#iconGradient);
+            filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.4));
+        }
+
+        .header-text h1 {
+            font-size: 20px;
+            font-weight: 600;
             color: var(--text-primary);
             letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .header-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 0 0;
         }
 
         .header-info {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 8px;
         }
 
         .interface-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .interface-label span {
-            color: var(--text-secondary);
-        }
-
-        .interface-label {
-            position: relative;
-            z-index: 100;
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         .interface-select {
-            background: var(--accent-10);
-            color: var(--accent);
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            font-family: monospace;
-            border: 1px solid var(--accent-30);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 4px;
+            padding: 8px 32px 8px 12px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
         }
 
         .interface-select:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: rgba(249, 115, 22, 0.5);
         }
 
         .interface-select option {
@@ -115,125 +154,205 @@
         }
 
         .interface-badge {
-            background: var(--accent-10);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             color: var(--accent);
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            font-family: monospace;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
             border-radius: 4px;
         }
 
-        .public-ip {
+        .ip-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin-top: 24px;
+            width: 100%;
+        }
+
+        .ip-status-left {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            background: var(--bg-card);
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
+            gap: 16px;
             position: relative;
+            cursor: default;
         }
 
-        .ip-label {
+        .ip-status-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .ip-status-label span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .ip-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+        }
+
+        .ip-info-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ip-info-display .flag {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .ip-info-display .ip-address {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent-green);
+            cursor: pointer;
+        }
+
+        .ip-info-display .country {
+            font-size: 13px;
             color: var(--text-secondary);
-            font-size: 0.75rem;
-            white-space: nowrap;
         }
 
-        .public-ip.loading {
+        .ip-status-bar.loading {
             pointer-events: none;
         }
 
-        .public-ip.loading::before {
+        .ip-status-bar.loading::before {
             content: 'Refreshing IP...';
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(9, 9, 11, 0.75);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 6px;
             z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-primary);
-            font-size: 0.75rem;
+            font-size: 13px;
             font-weight: 500;
+            letter-spacing: 0.02em;
         }
 
-        .public-ip .flag {
-            font-size: 1.1rem;
-            line-height: 1;
+        .ip-status-bar {
+            position: relative;
+            z-index: 100;
         }
 
-        .public-ip .ip-address {
-            font-family: monospace;
-            color: #5c9eff;
+        .refresh-ip-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
             cursor: pointer;
-        }
-
-        .public-ip .country {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .public-ip .ip-info {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            cursor: help;
-            position: relative;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            transition: background-color 0.15s;
+            justify-content: center;
+            transition: all 0.15s ease;
         }
 
-        .public-ip .ip-info:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+        .refresh-ip-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .refresh-ip-btn svg {
+            width: 14px;
+            height: 14px;
         }
 
         .ip-tooltip {
             display: none;
             position: absolute;
-            top: 100%;
+            top: calc(100% + 8px);
             left: 0;
-            margin-top: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            padding: 0.75rem 1rem;
+            background: #0f0f11;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            padding: 12px 16px;
             width: max-content;
-            z-index: 50;
-            font-size: 0.8rem;
+            z-index: 9999;
+            font-size: 13px;
             text-align: left;
             white-space: nowrap;
+            box-shadow:
+                0 4px 6px rgba(0, 0, 0, 0.3),
+                0 10px 20px rgba(0, 0, 0, 0.4),
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.06),
+                0 0 80px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        .ip-tooltip::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            mix-blend-mode: overlay;
         }
 
         .ip-tooltip::before {
             content: '';
             position: absolute;
-            top: -6px;
-            left: 20px;
+            top: -7px;
+            left: 24px;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 7px solid #3f3f46;
+        }
+
+        .ip-tooltip::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 25px;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-bottom: 6px solid var(--border-subtle);
+            border-bottom: 6px solid #0f0f11;
         }
 
-        .info-icon {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-left: 0.25rem;
-        }
-
-        .public-ip .ip-info:hover .ip-tooltip,
-        .public-ip .ip-info.active .ip-tooltip {
+        .ip-status-bar:hover .ip-tooltip {
             display: block;
         }
 
         .ip-tooltip-row {
             display: flex;
             justify-content: space-between;
-            gap: 1.5rem;
-            padding: 0.25rem 0;
-            border-bottom: 1px solid var(--border-subtle);
+            gap: 2rem;
+            padding: 6px 0;
+            border-bottom: 1px solid #27272a;
         }
 
         .ip-tooltip-row:last-child {
@@ -241,116 +360,78 @@
         }
 
         .ip-tooltip-label {
-            color: var(--text-secondary);
+            color: #71717a;
+            font-weight: 500;
         }
 
         .ip-tooltip-value {
-            color: var(--text-primary);
-            font-family: monospace;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
+            color: #fafafa;
+            font-family: 'IBM Plex Mono', monospace;
             font-weight: 500;
-            border-radius: 4px;
-        }
-
-        .status-ok {
-            background: var(--accent-10);
-            color: var(--accent);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         .container {
-            max-width: 900px;
+            max-width: 880px;
             margin: 0 auto;
-            padding: 1.5rem;
+            padding: 40px 48px 48px 48px;
         }
 
-        .toolbar {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 12px;
+            padding: 0 4px;
         }
 
-        .toolbar h2 {
-            font-size: 1.125rem;
-            font-weight: 500;
-            color: var(--text-secondary);
+        .section-header h2 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0;
         }
 
-        .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .refresh-btn {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .refresh-btn:hover {
-            background: var(--bg-elevated);
-            border-color: var(--border);
-        }
-
-        .refresh-btn svg {
-            width: 16px;
-            height: 16px;
+        .section-header .device-count {
+            font-size: 11px;
+            color: var(--text-dim);
         }
 
         .device-list {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 6px;
         }
 
         .device-card {
             position: relative;
             background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 1rem 1.25rem;
+            border: 1px solid transparent;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            transition: border-color 0.2s;
+            justify-content: space-between;
+            transition: all 0.15s ease;
         }
 
-        .device-card.favorite {
-            border-color: var(--accent);
-            background: var(--bg-card);
+        .device-card:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .device-card:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .device-card:only-child {
+            border-radius: 6px;
         }
 
         .device-card:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
         }
 
         .device-card.loading {
@@ -361,7 +442,9 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(18, 18, 18, 0.7);
+            background: rgba(9, 9, 11, 0.75);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 1;
         }
 
@@ -384,6 +467,12 @@
             to { transform: rotate(360deg); }
         }
 
+        .device-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
         .device-info {
             flex: 1;
             min-width: 0;
@@ -392,36 +481,41 @@
         .device-primary {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 4px;
         }
 
         .device-ip {
-            font-size: 1.125rem;
-            font-weight: 600;
-            font-family: monospace;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
             color: var(--text-primary);
             cursor: pointer;
         }
 
+        .device-card.inactive .device-ip {
+            color: var(--text-dim);
+        }
+
         .device-name {
-            color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 13px;
+            color: var(--text-secondary);
             cursor: pointer;
         }
 
+        .device-card.inactive .device-name {
+            color: var(--text-dim);
+        }
+
         .device-name:hover {
-            color: var(--text-secondary);
+            color: var(--text-primary);
             text-decoration: underline;
         }
 
         .device-meta {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            gap: 8px;
         }
 
         .device-mac {
@@ -431,46 +525,34 @@
         }
 
         .device-mac .mac-text {
-            font-family: monospace;
-            text-transform: uppercase;
-            filter: blur(4px);
-            transition: filter 0.2s;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
         }
 
         .device-mac .mac-reveal {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.6rem;
-            font-family: monospace;
-            color: var(--text-secondary);
-            opacity: 1;
-            transition: opacity 0.2s;
-            white-space: nowrap;
+            display: none;
         }
 
         .device-mac:hover .mac-text {
-            filter: blur(0);
-        }
-
-        .device-mac:hover .mac-reveal {
-            opacity: 0;
+            color: var(--text-secondary);
         }
 
         .source-badge {
             display: inline-block;
-            padding: 0.125rem 0.5rem;
-            font-size: 0.7rem;
+            padding: 2px 6px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-radius: 3px;
+            letter-spacing: 0.03em;
+            border-radius: 2px;
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--accent);
         }
 
         .source-dhcp {
-            background: rgba(92, 159, 255, 0.1);
-            color: #5c9eff;
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--accent);
         }
 
         .source-static {
@@ -481,47 +563,52 @@
         .device-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 16px;
         }
 
         .favorite-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1.25rem;
-            padding: 0.25rem;
-            transition: color 0.2s;
+            font-size: 16px;
+            padding: 0;
+            line-height: 1;
+            transition: all 0.15s ease;
         }
 
         .favorite-btn:hover {
-            color: var(--accent);
+            transform: scale(1.1);
         }
 
         .favorite-btn.active {
-            color: var(--accent);
+            color: var(--accent-star);
         }
 
         .favorite-btn:not(.active) {
-            color: var(--text-muted);
+            color: var(--text-darker);
         }
 
         .menu-container {
             position: relative;
+            margin-left: auto;
+            padding-left: 8px;
         }
 
         .menu-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1.25rem;
-            padding: 0.25rem 0.5rem;
-            color: var(--text-muted);
-            transition: color 0.2s;
-            line-height: 1;
+            color: var(--text-darker);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .menu-btn:hover {
-            color: var(--text-secondary);
+        .menu-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
 
         .dropdown-menu {
@@ -530,7 +617,7 @@
             top: 100%;
             right: 0;
             background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 4px;
             min-width: 140px;
             z-index: 100;
@@ -550,7 +637,7 @@
             font-size: 0.875rem;
             text-align: left;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s;
         }
 
         .dropdown-item:hover {
@@ -558,54 +645,60 @@
             color: var(--text-primary);
         }
 
-        .collapsible-section {
-            margin-top: 2rem;
+        .hidden-devices-row {
+            margin-top: 12px;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
         }
 
-        .collapsible-header {
+        .hidden-devices-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .hidden-devices-row span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .hidden-devices-right {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .collapsible-header:hover {
-            background: var(--bg-elevated);
-        }
-
-        .collapsible-header h3 {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            flex: 1;
+            gap: 8px;
         }
 
         .hidden-count {
-            background: rgba(167, 139, 250, 0.1);
-            color: #a78bfa;
-            padding: 0.125rem 0.5rem;
-            font-size: 0.75rem;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            font-size: 11px;
             font-weight: 600;
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
-        .collapsible-arrow {
-            color: var(--text-muted);
+        .hidden-arrow {
+            color: var(--text-dim);
             transition: transform 0.2s;
         }
 
-        .collapsible-header.expanded .collapsible-arrow {
+        .hidden-arrow svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .hidden-devices-row.expanded .hidden-arrow {
             transform: rotate(180deg);
         }
 
         .collapsible-content {
             display: none;
-            padding-top: 0.75rem;
+            padding-top: 12px;
         }
 
         .collapsible-content.expanded {
@@ -620,57 +713,77 @@
             opacity: 1;
         }
 
-        .toggle-wrapper {
+        .device-location {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 6px;
+            min-width: 120px;
+            justify-content: flex-end;
         }
 
-        .toggle-label {
-            font-size: 0.875rem;
+        .device-location .flag {
+            font-size: 12px;
+        }
+
+        .device-location .location-name {
+            font-size: 12px;
             font-weight: 500;
             color: var(--text-secondary);
-            min-width: 35px;
-            text-align: right;
         }
 
-        .toggle-label.active {
-            color: var(--accent);
+        .device-card.inactive .device-location .location-name {
+            color: var(--text-dim);
         }
 
         .swap-btn {
-            background: var(--accent-10);
-            border: 1px solid var(--accent-40);
-            border-radius: 4px;
-            color: var(--accent);
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
             position: relative;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
         }
 
-        .swap-btn:hover {
-            background: var(--accent-20);
-            border-color: var(--accent);
+        .swap-btn:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            z-index: 100;
+        }
+
+        .swap-btn.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .swap-btn svg {
+            width: 12px;
+            height: 12px;
         }
 
         .swap-btn .swap-tooltip {
             display: none;
             position: absolute;
             bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
+            right: 50%;
+            transform: translateX(50%);
+            background: #0f0f11;
+            border: 1px solid #3f3f46;
             border-radius: 4px;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.75rem;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
             white-space: nowrap;
             color: var(--text-primary);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            pointer-events: none;
         }
 
         .swap-btn .swap-tooltip::after {
@@ -680,23 +793,104 @@
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: var(--border-subtle);
+            border-top-color: #3f3f46;
         }
 
         .swap-btn:hover .swap-tooltip {
             display: block;
         }
 
-        .toggle {
-            position: relative;
+        .toggle-switch {
             width: 44px;
             height: 24px;
+            border-radius: 4px;
+            background: var(--border);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-switch:hover {
+            opacity: 0.9;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-green);
+        }
+
+        .toggle-knob {
+            width: 18px;
+            height: 18px;
+            border-radius: 2px;
+            background: var(--text-primary);
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: left 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-knob {
+            left: 23px;
+        }
+
+        /* Legacy toggle styles for backwards compatibility */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
         }
 
         .toggle input {
             opacity: 0;
             width: 0;
             height: 0;
+            position: absolute;
+        }
+
+        .toggle-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            background: #0f0f11;
+            border: 1px solid #3f3f46;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .toggle-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 12px;
+            border: 6px solid transparent;
+            border-top-color: #3f3f46;
+        }
+
+        .toggle-container:hover .toggle-tooltip {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .toggle-tooltip {
+                display: none !important;
+            }
         }
 
         .slider {
@@ -704,7 +898,7 @@
             cursor: pointer;
             inset: 0;
             background: var(--border);
-            border-radius: 12px;
+            border-radius: 4px;
             transition: background 0.2s;
         }
 
@@ -715,54 +909,77 @@
             width: 18px;
             left: 3px;
             bottom: 3px;
-            background: var(--text-secondary);
-            border-radius: 50%;
-            transition: all 0.2s;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         input:checked + .slider {
-            background: var(--accent);
+            background: var(--accent-green);
         }
 
         input:checked + .slider:before {
             transform: translateX(20px);
-            background: #fafafa;
         }
 
         input:focus + .slider {
-            outline: 2px solid var(--accent-30);
+            outline: 2px solid rgba(249, 115, 22, 0.3);
             outline-offset: 1px;
         }
 
         .footer {
+            margin-top: 32px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            padding: 1.5rem;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-timestamp {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .version-badge {
+            font-size: 10px;
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg-elevated);
+            padding: 2px 6px;
+            border-radius: 1px;
         }
 
         .restart-btn {
-            background: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background: transparent;
             border: 1px solid var(--border);
             color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
         }
 
         .restart-btn:hover {
-            color: var(--text-secondary);
-            border-color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .restart-btn:active {
-            background: var(--bg-elevated);
+        .restart-btn svg {
+            width: 12px;
+            height: 12px;
         }
 
         .empty-state {
@@ -795,7 +1012,7 @@
             background: var(--bg-card);
             padding: 1.5rem;
             min-width: 300px;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 8px;
         }
 
@@ -807,12 +1024,13 @@
         .modal-content input {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 4px;
             background: var(--bg-base);
             color: var(--text-primary);
             font-size: 1rem;
             margin-bottom: 1rem;
+            font-family: 'Inter', sans-serif;
         }
 
         .modal-content input:focus {
@@ -844,190 +1062,577 @@
             color: var(--text-primary);
         }
 
+        /* Tablet breakpoint */
+        @media (max-width: 768px) {
+            .header {
+                padding: 36px 24px 0 24px;
+            }
+
+            .container {
+                padding: 28px 24px 32px 24px;
+            }
+
+            .device-card {
+                padding: 14px 18px;
+            }
+
+            .device-location {
+                min-width: 100px;
+            }
+        }
+
+        /* Mobile breakpoint */
         @media (max-width: 600px) {
             .header {
-                padding: 1rem;
+                padding: 24px 20px 0 20px;
+                max-width: 100%;
             }
 
             .header-content {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.75rem;
+                gap: 16px;
+                position: relative;
+            }
+
+            .header-title {
+                gap: 10px;
+                order: 1;
+            }
+
+            .header-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .header-icon svg {
+                width: 28px;
+                height: 28px;
+            }
+
+            .header-text h1 {
+                font-size: 18px;
+            }
+
+            .header-text p {
+                font-size: 11px;
             }
 
             .header-info {
                 width: 100%;
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.5rem;
+                gap: 8px;
+                order: 3;
             }
 
             .interface-label {
-                width: 100%;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
 
             .interface-select {
                 min-height: 44px;
-                font-size: 1rem;
-                flex: 1;
+                font-size: 14px;
+                width: 100%;
+                max-width: none;
             }
 
-            .status-badge {
-                display: none;
+            .interface-badge {
+                font-size: 14px;
+                padding: 10px 14px;
             }
 
             .container {
-                padding: 1rem;
+                padding: 32px 20px 28px 20px;
+                max-width: 100%;
             }
 
-            .toolbar {
+            .ip-status-bar {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
+                align-items: stretch;
+                gap: 10px;
+                padding: 14px 16px;
+                margin-top: 12px;
+                margin-bottom: 0;
+                order: 2;
             }
 
-            .toolbar-right {
-                width: 100%;
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-
-            .public-ip {
-                width: 100%;
+            .ip-status-left {
+                flex-direction: row;
                 flex-wrap: wrap;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .ip-status-label {
+                gap: 8px;
+            }
+
+            .ip-status-label span {
+                font-size: 12px;
+            }
+
+            .ip-divider {
+                display: none;
+            }
+
+            .ip-info-display {
+                flex: 1;
                 justify-content: flex-start;
-                padding: 0.5rem 0.75rem;
             }
 
-            .ip-label {
-                width: 100%;
-                margin-bottom: 0.25rem;
-                font-size: 0.7rem;
+            .ip-info-display .ip-address {
+                font-size: 13px;
             }
 
-            .public-ip .ip-info {
-                padding: 0.375rem;
+            .ip-info-display .country {
+                font-size: 12px;
             }
 
-            .public-ip .ip-address {
-                font-size: 0.9rem;
+            .refresh-ip-btn {
+                position: fixed;
+                top: 20px;
+                right: 16px;
+                width: 36px;
+                height: 36px;
+                z-index: 10;
             }
 
-            .refresh-btn {
-                width: 100%;
-                min-height: 36px;
-                padding: 0.375rem 0.75rem;
-                justify-content: center;
-                font-size: 0.8rem;
+            .section-header {
+                padding: 0;
+                margin-bottom: 10px;
+            }
+
+            .section-header h2 {
+                font-size: 10px;
+            }
+
+            .device-list {
+                background: transparent;
+                gap: 12px;
+                border-radius: 0;
             }
 
             .device-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-                padding: 1rem;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 0;
+                padding: 14px 16px;
+                border-radius: 10px;
+                border: 1px solid var(--border);
+            }
+
+            .device-card:first-child,
+            .device-card:last-child,
+            .device-card:only-child {
+                border-radius: 10px;
+            }
+
+            .device-left {
+                display: contents;
+            }
+
+            .favorite-btn {
+                display: none;
+            }
+
+            .device-info {
+                display: contents;
+            }
+
+            /* Row 1: Name (top left) */
+            .device-primary {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+                padding-right: 40px;
+                order: 1;
+            }
+
+            .device-name {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--text-primary);
+                opacity: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+                min-width: 0;
+                order: -1;
             }
 
             .device-ip {
-                font-size: 1.25rem;
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--text-secondary);
+                flex-shrink: 0;
+                order: 1;
             }
 
-            .device-actions {
-                width: 100%;
-                justify-content: space-between;
-                padding-top: 0.75rem;
-                border-top: 1px solid var(--border-subtle);
-            }
-
-            .toggle {
-                width: 52px;
-                height: 28px;
-            }
-
-            .slider:before {
-                height: 22px;
-                width: 22px;
-            }
-
-            input:checked + .slider:before {
-                transform: translateX(24px);
-            }
-
-            .favorite-btn,
-            .menu-btn {
-                font-size: 1.5rem;
-                min-width: 44px;
-                min-height: 44px;
+            /* Swap button - icon only on mobile */
+            .swap-btn {
+                position: relative;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+                min-height: 36px;
+                padding: 0;
+                margin-top: 12px;
+                margin-left: auto;
+                border-radius: 6px;
+                background: var(--accent);
+                border: 1px solid var(--accent);
+                color: #ffffff;
+                order: 10;
             }
 
-            .swap-btn {
-                min-height: 44px;
-                padding: 0.5rem 0.75rem;
+            .swap-btn::before {
+                display: none;
+            }
+
+            .swap-btn svg {
+                width: 16px;
+                height: 16px;
+                stroke: #ffffff;
             }
 
             .swap-btn .swap-tooltip {
                 display: none !important;
             }
 
+            .swap-btn .swap-tooltip::after {
+                display: none;
+            }
+
+            /* Row 2: MAC + Badge */
+            .device-meta {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                order: 2;
+            }
+
+            .device-mac {
+                display: flex;
+                align-items: center;
+            }
+
+            .device-mac .mac-text {
+                font-size: 11px;
+                letter-spacing: 0.02em;
+            }
+
+            .device-mac .mac-reveal {
+                font-size: 10px;
+            }
+
+            .source-badge {
+                font-size: 9px;
+                padding: 3px 6px;
+                line-height: 1;
+            }
+
+            .device-mac {
+                cursor: default;
+            }
+
+            .device-mac:hover .mac-text {
+                color: var(--text-dim);
+            }
+
+            /* Row 3: Location + Toggle */
+            .device-actions {
+                display: flex;
+                width: 100%;
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 12px;
+                border-top: 1px solid var(--border);
+                margin-top: 12px;
+                gap: 12px;
+                order: 3;
+            }
+
+            .device-location {
+                min-width: auto;
+                justify-content: flex-start;
+            }
+
+            .device-location .location-name {
+                font-size: 12px;
+            }
+
+            .menu-container {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 1;
+            }
+
+            .menu-btn {
+                min-width: 36px;
+                min-height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .menu-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .toggle {
+                width: 50px;
+                height: 26px;
+            }
+
+            .slider:before {
+                height: 20px;
+                width: 20px;
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(24px);
+            }
+
+            .toggle-tooltip {
+                display: none !important;
+            }
+
             .dropdown-menu {
                 min-width: 160px;
+                right: 0;
             }
 
             .dropdown-item {
-                padding: 0.875rem 1rem;
-                min-height: 44px;
+                padding: 14px 16px;
+                min-height: 48px;
+                font-size: 14px;
             }
 
             .ip-tooltip {
-                left: 0;
-                right: auto;
-                min-width: 200px;
+                display: none !important;
+            }
+
+            .ip-info-display {
+                cursor: default;
             }
 
             .modal-content {
-                margin: 1rem;
-                width: calc(100% - 2rem);
+                margin: 16px;
+                width: calc(100% - 32px);
                 max-width: 400px;
+                padding: 20px;
+            }
+
+            .modal-content h3 {
+                font-size: 16px;
+                margin-bottom: 16px;
             }
 
             .modal-content input {
-                min-height: 44px;
-                font-size: 1rem;
+                min-height: 48px;
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            .modal-buttons {
+                gap: 12px;
             }
 
             .modal-btn {
-                min-height: 44px;
-                padding: 0.75rem 1.25rem;
-            }
-
-            .collapsible-header {
                 min-height: 48px;
+                padding: 14px 20px;
+                font-size: 14px;
+                flex: 1;
             }
 
-            .ip-tooltip {
-                left: auto;
-                right: 0;
-                max-width: calc(100vw - 2rem);
+            .hidden-devices-row {
+                min-height: 52px;
+                padding: 14px 16px;
+                margin-top: 16px;
+                border-radius: 8px;
             }
 
-            .ip-tooltip::before {
-                left: auto;
-                right: 20px;
+            .hidden-devices-row span {
+                font-size: 14px;
+            }
+
+            .hidden-count {
+                font-size: 12px;
+                padding: 3px 10px;
+            }
+
+            .collapsible-content {
+                padding-top: 8px;
+            }
+
+            .collapsible-content .device-list {
+                border-radius: 8px;
             }
 
             .footer {
                 flex-direction: column;
-                gap: 0.75rem;
-                padding: 1rem;
+                gap: 16px;
+                padding-top: 24px;
+                margin-top: 32px;
+            }
+
+            .footer-left {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .footer-timestamp {
+                font-size: 10px;
+            }
+
+            .version-badge {
+                font-size: 9px;
             }
 
             .restart-btn {
-                min-height: 44px;
-                padding: 0.75rem 1.5rem;
-                font-size: 0.9rem;
+                min-height: 48px;
+                padding: 14px 24px;
+                width: 100%;
+                justify-content: center;
+                font-size: 13px;
+            }
+
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+
+            .empty-state h3 {
+                font-size: 1rem;
+            }
+
+            .empty-state p {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Extra small devices (iPhone SE, etc.) */
+        @media (max-width: 380px) {
+            .header {
+                padding: 16px 12px 0 12px;
+            }
+
+            .container {
+                padding: 16px 12px 20px 12px;
+            }
+
+            .header-text h1 {
+                font-size: 16px;
+            }
+
+            .interface-select {
+                font-size: 13px;
+            }
+
+            .refresh-ip-btn {
+                top: 16px;
+                right: 12px;
+                width: 32px;
+                height: 32px;
+            }
+
+            .ip-status-bar {
+                padding: 12px 14px;
+            }
+
+            .ip-status-label span {
+                font-size: 11px;
+            }
+
+            .device-card {
+                padding: 12px 14px;
+            }
+
+            .device-ip {
+                font-size: 14px;
+            }
+
+            .device-name {
+                font-size: 11px;
+            }
+
+            .device-actions {
+                padding-top: 10px;
+                margin-top: 10px;
+                gap: 8px;
+            }
+
+            .device-location .location-name {
+                font-size: 11px;
+            }
+
+            .menu-container {
+                top: 10px;
+                right: 10px;
+            }
+
+            .menu-btn {
+                min-width: 32px;
+                min-height: 32px;
+                width: 32px;
+                height: 32px;
+            }
+
+            .swap-btn {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                min-height: 32px;
+            }
+
+            .swap-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            .toggle {
+                width: 46px;
+                height: 24px;
+            }
+
+            .slider:before {
+                height: 18px;
+                width: 18px;
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(22px);
+            }
+
+            .modal-content {
+                margin: 12px;
+                width: calc(100% - 24px);
+                padding: 16px;
+            }
+
+            .hidden-devices-row {
+                padding: 12px 14px;
+            }
+
+            .footer-left {
+                gap: 8px;
+            }
+
+            .restart-btn {
+                padding: 12px 20px;
+                font-size: 12px;
             }
         }
 
@@ -1037,37 +1642,49 @@
     <header class="header">
         <div class="header-content">
             <div class="header-title">
-                <span class="header-emoji">🔐</span>
-                <h1>PBR VPN Control</h1>
+                <div class="header-icon">
+                    <svg viewBox="0 0 256 256">
+                        <defs>
+                            <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#fb923c"/>
+                                <stop offset="50%" style="stop-color:#f97316"/>
+                                <stop offset="100%" style="stop-color:#ea580c"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M176,160a39.89,39.89,0,0,0-28.62,12.09l-46.1-29.63a39.8,39.8,0,0,0,0-28.92l46.1-29.63a40,40,0,1,0-8.66-13.45l-46.1,29.63a40,40,0,1,0,0,55.82l46.1,29.63A40,40,0,1,0,176,160Zm0-128a24,24,0,1,1-24,24A24,24,0,0,1,176,32ZM64,152a24,24,0,1,1,24-24A24,24,0,0,1,64,152Zm112,72a24,24,0,1,1,24-24A24,24,0,0,1,176,224Z"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1>Splitflow</h1>
+                    <p>Per-device routing</p>
+                </div>
             </div>
             <div class="header-info">
                 {{if gt (len .VPNInterfaces) 1}}
-                <label class="interface-label">
-                    <span>Interface:</span>
-                    <select class="interface-select" onchange="setInterface(this.value)">
-                        {{range .VPNInterfaces}}
-                        <option value="{{.Name}}" {{if .Active}}selected{{end}}>{{if .DisplayName}}{{.DisplayName}}{{else}}{{.Name}}{{end}}</option>
-                        {{end}}
-                    </select>
-                </label>
+                <span class="interface-label">Network Interface</span>
+                <select class="interface-select" onchange="setInterface(this.value)">
+                    {{range .VPNInterfaces}}
+                    <option value="{{.Name}}" {{if .Active}}selected{{end}}>{{if .DisplayName}}{{.DisplayName}}{{else}}{{.Name}}{{end}}</option>
+                    {{end}}
+                </select>
                 {{else}}
+                <span class="interface-label">Network Interface</span>
                 <span class="interface-badge">{{.VPNInterfaceDisplay}}</span>
                 {{end}}
             </div>
-        </div>
-    </header>
 
-    <div class="container">
-        <div class="toolbar">
-            <h2>Network Devices</h2>
-            <div class="toolbar-right">
-                <div class="public-ip" id="publicIp">
-                    <span class="ip-label">Current Device IPv4:</span>
-                    <div class="ip-info" onclick="toggleIpTooltip(event)">
+            <!-- Current IP Status Bar -->
+            <div class="ip-status-bar" id="publicIp">
+                <div class="ip-status-left">
+                    <div class="ip-status-label">
+                        <div class="status-dot"></div>
+                        <span>Current Device IPv4</span>
+                    </div>
+                    <div class="ip-divider"></div>
+                    <div class="ip-info-display" onclick="toggleIpTooltip(event)">
                         <span class="flag" id="ipFlag">🌐</span>
                         <span class="ip-address" id="ipAddress" onclick="copyText(this, null, event)" title="Click to copy">—</span>
                         <span class="country" id="ipCountry"></span>
-                        <span class="info-icon">ⓘ</span>
                         <div class="ip-tooltip" id="ipTooltip">
                             <div class="ip-tooltip-row">
                                 <span class="ip-tooltip-label">IP</span>
@@ -1080,7 +1697,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="refresh-btn" onclick="location.reload()" title="Refresh">
+                <button class="refresh-ip-btn" onclick="refreshIP()" title="Refresh IP">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                         <path d="M3 3v5h5"/>
@@ -1089,6 +1706,14 @@
                     </svg>
                 </button>
             </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Section Header -->
+        <div class="section-header">
+            <h2>Network Devices</h2>
+            <span class="device-count">{{.VisibleCount}} active</span>
         </div>
 
         <div class="device-list">
@@ -1101,37 +1726,48 @@
                 {{else}}
                 {{range .Devices}}
                 {{if not .Hidden}}
-                <div class="device-card {{if .Favorite}}favorite{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
-                    <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
-                        {{if .Favorite}}★{{else}}☆{{end}}
-                    </button>
-                    <div class="device-info">
-                        <div class="device-primary">
-                            <span class="device-ip" onclick="copyText(this, '{{.IP}}', event)" title="Click to copy">{{.IP}}</span>
-                            <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
-                        </div>
-                        <div class="device-meta">
-                            <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}', event)"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
-                            <span class="source-badge source-{{.Source}}">{{.Source}}</span>
+                <div class="device-card{{if not .VPNEnabled}} inactive{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
+                    <div class="device-left">
+                        <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
+                            {{if .Favorite}}★{{else}}☆{{end}}
+                        </button>
+                        <div class="device-info">
+                            <div class="device-primary">
+                                <span class="device-ip" onclick="copyText(this, '{{.IP}}', event)" title="Click to copy">{{.IP}}</span>
+                                <span class="device-name" onclick="renameDevice('{{.MAC}}', this)" title="Click to rename">{{if .CustomName}}{{.CustomName}}{{else if .FriendlyName}}{{.FriendlyName}}{{else if .Hostname}}{{.Hostname}}{{else}}unknown{{end}}</span>
+                            </div>
+                            <div class="device-meta">
+                                <span class="device-mac" onclick="copyMAC(this, '{{.MAC}}', event)"><span class="mac-text">{{.MAC}}</span><span class="mac-reveal">Reveal MAC</span></span>
+                                <span class="source-badge source-{{.Source}}">{{.Source}}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="device-actions">
-                        <div class="toggle-wrapper">
-                            <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
-                            {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
-                            <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)">
-                                <span class="swap-tooltip">Swap traffic to {{$.VPNInterfaceDisplay}}</span>
-                                ⇄
-                            </button>
-                            {{end}}
+                        <div class="device-location">
+                            <span class="location-name">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
+                        </div>
+                        <div class="toggle-container">
+                            <span class="toggle-tooltip">Proxy traffic through {{$.VPNInterfaceDisplay}}</span>
                             <label class="toggle">
-                                <input type="checkbox" {{if .VPNEnabled}}checked{{end}}
-                                       onchange="toggleVPN('{{.IP}}', this)">
+                                <input type="checkbox" {{if .VPNEnabled}}checked{{end}} onchange="toggleVPN('{{.IP}}', this)">
                                 <span class="slider"></span>
                             </label>
                         </div>
+                        <button class="swap-btn{{if or (not .VPNEnabled) (eq .VPNInterface $.VPNInterface)}} disabled{{end}}" {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}onclick="confirmSwapInterface('{{.IP}}', '{{$.VPNInterfaceDisplay}}', this)"{{end}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 16V4m0 0L3 8m4-4l4 4"/>
+                                <path d="M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                            </svg>
+                            <span class="swap-tooltip">Swap routing to {{$.VPNInterfaceDisplay}}</span>
+                        </button>
                         <div class="menu-container">
-                            <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">⋮</button>
+                            <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="6" r="1.5"/>
+                                    <circle cx="12" cy="12" r="1.5"/>
+                                    <circle cx="12" cy="18" r="1.5"/>
+                                </svg>
+                            </button>
                             <div class="dropdown-menu">
                                 <button class="dropdown-item" onclick="toggleHidden('{{.MAC}}', true)">Hide device</button>
                             </div>
@@ -1150,17 +1786,24 @@
         </div>
 
         {{if gt .HiddenCount 0}}
-        <div class="collapsible-section">
-            <div class="collapsible-header" onclick="toggleCollapsible(this)">
-                <h3>Hidden Devices</h3>
+        <!-- Hidden Devices Row -->
+        <div class="hidden-devices-row" onclick="toggleCollapsible(this)">
+            <span>Hidden Devices</span>
+            <div class="hidden-devices-right">
                 <span class="hidden-count">{{.HiddenCount}}</span>
-                <span class="collapsible-arrow">▼</span>
+                <span class="hidden-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </span>
             </div>
-            <div class="collapsible-content">
-                <div class="device-list">
-                    {{range .Devices}}
-                    {{if .Hidden}}
-                    <div class="device-card {{if .Favorite}}favorite{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
+        </div>
+        <div class="collapsible-content">
+            <div class="device-list">
+                {{range .Devices}}
+                {{if .Hidden}}
+                <div class="device-card{{if not .VPNEnabled}} inactive{{end}}" data-ip="{{.IP}}" data-mac="{{.MAC}}">
+                    <div class="device-left">
                         <button class="favorite-btn {{if .Favorite}}active{{end}}" onclick="toggleFavorite('{{.MAC}}', this)" title="Toggle favorite">
                             {{if .Favorite}}★{{else}}☆{{end}}
                         </button>
@@ -1174,41 +1817,60 @@
                                 <span class="source-badge source-{{.Source}}">{{.Source}}</span>
                             </div>
                         </div>
-                        <div class="device-actions">
-                            <div class="toggle-wrapper">
-                                <span class="toggle-label {{if .VPNEnabled}}active{{end}}">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
-                                {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}
-                                <button class="swap-btn" onclick="swapInterface('{{.IP}}', this)">
-                                    <span class="swap-tooltip">Swap traffic to {{$.VPNInterfaceDisplay}}</span>
-                                    ⇄
-                                </button>
-                                {{end}}
-                                <label class="toggle">
-                                    <input type="checkbox" {{if .VPNEnabled}}checked{{end}}
-                                           onchange="toggleVPN('{{.IP}}', this)">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="menu-container">
-                                <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">⋮</button>
-                                <div class="dropdown-menu">
-                                    <button class="dropdown-item" onclick="toggleHidden('{{.MAC}}', false)">Unhide device</button>
-                                </div>
+                    </div>
+                    <div class="device-actions">
+                        <div class="device-location">
+                            <span class="location-name">{{if .VPNEnabled}}{{.VPNInterfaceDisplay}}{{else}}{{$.DefaultInterface}}{{end}}</span>
+                        </div>
+                        <div class="toggle-container">
+                            <span class="toggle-tooltip">Proxy traffic through {{$.VPNInterfaceDisplay}}</span>
+                            <label class="toggle">
+                                <input type="checkbox" {{if .VPNEnabled}}checked{{end}} onchange="toggleVPN('{{.IP}}', this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <button class="swap-btn{{if or (not .VPNEnabled) (eq .VPNInterface $.VPNInterface)}} disabled{{end}}" {{if and .VPNEnabled (ne .VPNInterface $.VPNInterface)}}onclick="confirmSwapInterface('{{.IP}}', '{{$.VPNInterfaceDisplay}}', this)"{{end}}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 16V4m0 0L3 8m4-4l4 4"/>
+                                <path d="M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                            </svg>
+                            <span class="swap-tooltip">Swap routing to {{$.VPNInterfaceDisplay}}</span>
+                        </button>
+                        <div class="menu-container">
+                            <button class="menu-btn" onclick="toggleMenu(event, this)" title="More options">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="6" r="1.5"/>
+                                    <circle cx="12" cy="12" r="1.5"/>
+                                    <circle cx="12" cy="18" r="1.5"/>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" onclick="toggleHidden('{{.MAC}}', false)">Unhide device</button>
                             </div>
                         </div>
                     </div>
-                    {{end}}
-                    {{end}}
                 </div>
+                {{end}}
+                {{end}}
             </div>
         </div>
         {{end}}
-    </div>
 
-    <footer class="footer">
-        <span>Last updated: {{.LastUpdated}} | v{{.Version}}</span>
-        <button class="restart-btn" onclick="restartServer()">Restart Server</button>
-    </footer>
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="footer-timestamp">Last updated: {{.LastUpdated}}</span>
+                <span class="version-badge">v{{.Version}}</span>
+            </div>
+            <button class="restart-btn" onclick="restartServer()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                </svg>
+                Restart Server
+            </button>
+        </footer>
+    </div>
 
     <div class="modal" id="renameModal">
         <div class="modal-content">
@@ -1221,9 +1883,22 @@
         </div>
     </div>
 
+    <div class="modal" id="swapConfirmModal">
+        <div class="modal-content">
+            <h3>Switch VPN Interface</h3>
+            <p id="swapConfirmText" style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem; line-height: 1.5;"></p>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeSwapConfirmModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="executeSwap()">Switch</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentRenameMAC = null;
         let currentRenameElement = null;
+        let pendingSwapIP = null;
+        let pendingSwapBtn = null;
         const activeInterface = '{{.VPNInterface}}';
         const defaultInterface = '{{.DefaultInterface}}';
         const clientIP = '{{.ClientIP}}';
@@ -1264,24 +1939,24 @@
         async function fetchIPFromEndpoints() {
             const endpoints = [
                 {
-                    url: 'http://ip-api.com/json/?fields=query,country,countryCode,regionName,city',
+                    url: 'http://ip-api.com/json/?fields=query,country,countryCode,regionName,city,isp,org,as,timezone',
                     parse: (text) => {
                         const data = JSON.parse(text);
-                        return { ip: data.query, country_code: data.countryCode, city: data.city, region: data.regionName, country: data.country };
+                        return { ip: data.query, country_code: data.countryCode, city: data.city, region: data.regionName, country: data.country, isp: data.isp, org: data.org, as: data.as, timezone: data.timezone };
                     }
                 },
                 {
                     url: 'https://1.1.1.1/cdn-cgi/trace',
                     parse: (text) => {
                         const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
-                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null };
+                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null, isp: null, org: null, as: null, timezone: null };
                     }
                 },
                 {
                     url: 'https://cloudflare.com/cdn-cgi/trace',
                     parse: (text) => {
                         const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
-                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null };
+                        return { ip: data.ip, country_code: data.loc, city: null, region: null, country: null, isp: null, org: null, as: null, timezone: null };
                     }
                 }
             ];
@@ -1392,7 +2067,7 @@
 
         async function toggleVPN(ip, checkbox) {
             const card = checkbox.closest('.device-card');
-            const label = card.querySelector('.toggle-label');
+            const locationLabel = card.querySelector('.location-name');
             const ipContainer = document.getElementById('publicIp');
             const initialIP = document.getElementById('ipAddress').textContent;
             const isCurrentDevice = ip === clientIP;
@@ -1414,9 +2089,9 @@
                     alert('Error: ' + data.error);
                 } else {
                     if (data.vpn_enabled) {
-                        label.classList.add('active');
-                        if (data.device && data.device.vpn_interface) {
-                            label.textContent = getInterfaceDisplayName(data.device.vpn_interface);
+                        card.classList.remove('inactive');
+                        if (locationLabel && data.device && data.device.vpn_interface) {
+                            locationLabel.textContent = getInterfaceDisplayName(data.device.vpn_interface);
                         }
                         // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
@@ -1424,8 +2099,10 @@
                             fetchPublicIP(initialIP);
                         }
                     } else {
-                        label.classList.remove('active');
-                        label.textContent = defaultInterface;
+                        card.classList.add('inactive');
+                        if (locationLabel) {
+                            locationLabel.textContent = defaultInterface;
+                        }
                         // Clear cache and refetch IP if toggling current device
                         if (isCurrentDevice) {
                             cachedIPData = null;
@@ -1442,9 +2119,33 @@
             }
         }
 
+        function confirmSwapInterface(ip, targetInterface, btn) {
+            pendingSwapIP = ip;
+            pendingSwapBtn = btn;
+            document.getElementById('swapConfirmText').textContent =
+                `Switch this device's VPN routing to ${targetInterface}?`;
+            document.getElementById('swapConfirmModal').classList.add('active');
+        }
+
+        function closeSwapConfirmModal() {
+            document.getElementById('swapConfirmModal').classList.remove('active');
+            pendingSwapIP = null;
+            pendingSwapBtn = null;
+        }
+
+        async function executeSwap() {
+            if (!pendingSwapIP || !pendingSwapBtn) return;
+            const ip = pendingSwapIP;
+            const btn = pendingSwapBtn;
+            document.getElementById('swapConfirmModal').classList.remove('active');
+            pendingSwapIP = null;
+            pendingSwapBtn = null;
+            await swapInterface(ip, btn);
+        }
+
         async function swapInterface(ip, btn) {
             const card = btn.closest('.device-card');
-            const label = card.querySelector('.toggle-label');
+            const locationLabel = card.querySelector('.location-name');
             const ipContainer = document.getElementById('publicIp');
             const initialIP = document.getElementById('ipAddress').textContent;
             const isCurrentDevice = ip === clientIP;
@@ -1464,8 +2165,8 @@
                     ipContainer.classList.remove('loading');
                     alert('Error: ' + data.error);
                 } else {
-                    if (data.device && data.device.vpn_interface) {
-                        label.textContent = getInterfaceDisplayName(data.device.vpn_interface);
+                    if (locationLabel && data.device && data.device.vpn_interface) {
+                        locationLabel.textContent = getInterfaceDisplayName(data.device.vpn_interface);
                     }
                     btn.remove();
                     // Clear cache and refetch IP if swapping current device
@@ -1614,6 +2315,11 @@
             ipInfo.classList.toggle('active');
         }
 
+        function refreshIP() {
+            cachedIPData = null;
+            fetchPublicIP();
+        }
+
         // Close dropdown menus and tooltip when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menu-container')) {
@@ -1621,8 +2327,8 @@
                     menu.classList.remove('active');
                 });
             }
-            if (!e.target.closest('.ip-info')) {
-                document.querySelectorAll('.ip-info.active').forEach(info => {
+            if (!e.target.closest('.ip-info-display')) {
+                document.querySelectorAll('.ip-info-display.active').forEach(info => {
                     info.classList.remove('active');
                 });
             }
@@ -1635,15 +2341,19 @@
                 document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
                     menu.classList.remove('active');
                 });
-                document.querySelectorAll('.ip-info.active').forEach(info => {
+                document.querySelectorAll('.ip-info-display.active').forEach(info => {
                     info.classList.remove('active');
                 });
             }
         });
 
-        // Close modal on background click
+        // Close modals on background click
         document.getElementById('renameModal').addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) closeRenameModal();
+        });
+
+        document.getElementById('swapConfirmModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) closeSwapConfirmModal();
         });
 
         // Submit rename on enter
