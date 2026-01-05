@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -477,19 +476,31 @@ func (s *Server) handleSwapInterface(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handlePublicIP(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get("https://ifconfig.co/json")
+	resp, err := client.Get("https://ip-check-perf.radar.cloudflare.com/api/info")
 	if err != nil {
 		writeError(w, "Failed to fetch public IP", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		writeError(w, "Failed to read response", http.StatusInternalServerError)
+	var cfResp struct {
+		IP      string `json:"ip_address"`
+		Country string `json:"country"`
+		City    string `json:"city"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&cfResp); err != nil {
+		writeError(w, "Failed to parse response", http.StatusInternalServerError)
 		return
 	}
 
+	// Return in a consistent format
+	result := map[string]string{
+		"ip":           cfResp.IP,
+		"country_code": cfResp.Country,
+		"country":      cfResp.Country,
+		"city":         cfResp.City,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
+	json.NewEncoder(w).Encode(result)
 }

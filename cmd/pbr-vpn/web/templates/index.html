@@ -977,12 +977,12 @@
                                 <span class="ip-tooltip-value" id="tipIp">-</span>
                             </div>
                             <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">Location</span>
-                                <span class="ip-tooltip-value" id="tipLocation">-</span>
+                                <span class="ip-tooltip-label">Country</span>
+                                <span class="ip-tooltip-value" id="tipCountry">-</span>
                             </div>
                             <div class="ip-tooltip-row">
-                                <span class="ip-tooltip-label">ISP</span>
-                                <span class="ip-tooltip-value" id="tipIsp">-</span>
+                                <span class="ip-tooltip-label">Datacenter</span>
+                                <span class="ip-tooltip-value" id="tipColo">-</span>
                             </div>
                         </div>
                     </div>
@@ -1168,28 +1168,30 @@
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    // Use ip-api.com (supports CORS over HTTP)
-                    const resp = await fetchWithTimeout('http://ip-api.com/json/?_=' + Date.now(), { cache: 'no-store' }, 3000);
-                    const data = await resp.json();
+                    const resp = await fetchWithTimeout('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' }, 10000);
+                    const text = await resp.text();
+                    const data = Object.fromEntries(text.trim().split('\n').map(line => line.split('=')));
+                    const ip = data.ip;
+                    const country_code = data.loc;
+                    const colo = data.colo;
 
-                    if (data.query) {
+                    if (ip) {
                         // If we expect a different IP and got the same one, retry
-                        if (expectDifferentFrom && data.query === expectDifferentFrom && attempt < maxRetries) {
+                        if (expectDifferentFrom && ip === expectDifferentFrom && attempt < maxRetries) {
                             await new Promise(r => setTimeout(r, 1000));
                             continue;
                         }
 
-                        ipEl.textContent = data.query;
-                        flagEl.textContent = countryToFlag(data.countryCode);
-                        countryEl.textContent = data.country || '';
+                        ipEl.textContent = ip;
+                        flagEl.textContent = country_code ? countryToFlag(country_code) : '🌐';
+                        countryEl.textContent = country_code || '';
 
                         // Update tooltip
-                        document.getElementById('tipIp').textContent = data.query;
-                        const location = [data.city, data.country].filter(Boolean).join(', ') || '-';
-                        document.getElementById('tipLocation').textContent = location;
-                        document.getElementById('tipIsp').textContent = data.isp || '-';
+                        document.getElementById('tipIp').textContent = ip;
+                        document.getElementById('tipCountry').textContent = country_code || '-';
+                        document.getElementById('tipColo').textContent = colo || '-';
                         container.classList.remove('loading');
-                        return data.query;
+                        return ip;
                     } else {
                         throw new Error('No IP returned');
                     }
